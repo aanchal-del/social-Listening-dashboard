@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Contextual Pulse — Re-Aline</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f6fa;color:#222;font-size:13px}
+/* ── TOPBAR ── */
+.topbar{background:#fff;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 20px;height:52px;gap:20px;position:sticky;top:0;z-index:300}
+.logo{font-weight:800;font-size:15px;color:#4b52d4;white-space:nowrap}
+.brand-block{display:flex;flex-direction:column;gap:1px}
+.brand-block label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.4px}
+.brand-select-wrap{display:flex;align-items:center;gap:6px}
+.brand-dot{width:8px;height:8px;border-radius:50%;background:#4b52d4}
+.brand-select-wrap select{border:none;font-size:12px;font-weight:600;color:#222;outline:none;background:transparent;cursor:pointer}
+.duration-block{margin-left:auto;text-align:right}
+.duration-block label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.4px;display:block}
+.duration-block span{font-size:12px;font-weight:600}
+/* ── HERO ── */
+.hero{background:#fff;border-bottom:1px solid #e8e8e8;padding:14px 20px 10px}
+.hero h1{font-size:14px;font-weight:700;margin-bottom:3px}
+.hero p{font-size:12px;color:#666;line-height:1.5}
+/* ── QUICK FILTERS ── */
+.qf{background:#fff;border-bottom:1px solid #e8e8e8;padding:8px 20px;display:flex;align-items:center;gap:8px;font-size:12px;color:#666}
+.qf-star{color:#f0a500}
+.qf-pill{background:#f0f0f0;border-radius:12px;padding:3px 10px;font-size:11px;color:#888}
+/* ── MAIN TABS ── */
+.main-tabs{background:#fff;border-bottom:1px solid #e8e8e8;padding:0 20px;display:flex;gap:4px}
+.main-tab{padding:12px 16px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:#666;border-bottom:3px solid transparent;transition:all .15s}
+.main-tab:hover{color:#4b52d4}
+.main-tab.active{color:#4b52d4;border-bottom-color:#4b52d4;font-weight:600}
+/* ── PAGE ── */
+.page{display:none;padding:16px 20px}
+.page.active{display:block}
+/* ── SECTION HEADER ── */
+.sec-header{background:#f0f2f8;border:1px solid #e0e4ef;border-radius:6px 6px 0 0;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+.sec-header-title{font-weight:700;font-size:13px;color:#333}
+.sec-header-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{background:none;border:1px solid #d0d4e0;border-radius:4px;padding:3px 6px;cursor:pointer;font-size:11px;color:#666}
+.icon-btn:hover{border-color:#4b52d4;color:#4b52d4}
+/* ── SUBSECTION ── */
+.sub-section{background:#fff;border:1px solid #e8e8e8;border-top:none;padding:14px 16px}
+.sub-title{font-weight:600;font-size:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.export-btn{background:#fff;border:1px solid #52c41a;color:#52c41a;padding:3px 10px;border-radius:4px;font-size:11px;cursor:pointer;font-weight:600}
+.export-btn:hover{background:#f6ffed}
+/* ── VOICE CARDS ── */
+.voice-row{display:flex;gap:10px;margin-bottom:10px}
+.voice-card{flex:1;border:1px solid #e8e8e8;border-radius:6px;padding:12px 16px;background:#fff;cursor:default}
+.voice-card.clickable{cursor:pointer;transition:all .15s}
+.voice-card.clickable:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.1)}
+.voice-card.pos{background:#f6ffed;border-color:#b7eb8f}
+.voice-card.neg{background:#fff2f0;border-color:#ffa39e}
+.voice-card.neu{background:#fffbe6;border-color:#ffe58f}
+.vc-label{font-size:11px;color:#888;margin-bottom:6px}
+.vc-val{font-size:26px;font-weight:800;line-height:1;display:flex;align-items:center;gap:8px}
+.vc-pct{font-size:12px;font-weight:500;color:#4b52d4;display:flex;align-items:center;gap:2px}
+.vc-pct svg{width:14px;height:14px}
+.unique-panel{flex:0 0 200px;border:1px solid #e8e8e8;border-radius:6px;padding:12px 16px;background:#fff}
+/* ── TWO COL ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
+.panel{background:#fff;border:1px solid #e8e8e8;border-radius:6px;padding:14px}
+.panel-title{font-weight:600;font-size:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.panel-title select{font-size:11px;border:1px solid #d0d4e0;border-radius:4px;padding:2px 6px;background:#fff;cursor:pointer;outline:none}
+/* ── CHART CONTAINER ── */
+.chart-wrap{position:relative}
+/* ── SOV LEGEND ── */
+.sov-legend{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.sov-item{display:flex;align-items:center;gap:8px;font-size:11px}
+.sov-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sov-name{flex:1;color:#444}
+.sov-val{color:#888;white-space:nowrap}
+/* ── TREEMAP ── */
+.treemap{display:flex;flex-wrap:wrap;gap:3px;padding:4px;min-height:200px}
+.tm-cell{border-radius:4px;background:#7b83d4;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:6px;cursor:pointer;transition:opacity .15s}
+.tm-cell:hover{opacity:.85}
+.tm-name{font-size:11px;font-weight:700;color:#fff;line-height:1.3}
+.tm-pct{font-size:10px;color:rgba(255,255,255,.8);margin-top:2px}
+/* ── WORD CLOUD ── */
+.word-cloud{padding:16px;min-height:160px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;align-items:center}
+.wc-word{cursor:pointer;font-weight:600;transition:opacity .15s;line-height:1.4}
+.wc-word:hover{opacity:.7}
+/* ── BUBBLE NODES (network) ── */
+.network{position:relative;min-height:380px;overflow:hidden}
+.node{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:transform .2s}
+.node:hover{transform:scale(1.08) !important}
+.node-label{font-size:10px;font-weight:700;color:#fff;line-height:1.3;padding:4px}
+/* ── SENTIMENT CIRCLES ── */
+.sent-circles{display:flex;flex-wrap:wrap;gap:8px;padding:10px;align-items:flex-end;justify-content:center}
+.sc-wrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.sc-circle{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:11px}
+.sc-name{font-size:10px;color:#666;text-align:center;max-width:80px}
+/* ── INTENT BREAKDOWN ── */
+.intent-card{background:#fafbff;border:1px solid #e8eaf6;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.ic-top{display:flex;align-items:center;gap:8px}
+.ic-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ic-name{font-weight:600;font-size:12px;color:#333;flex:1}
+.ic-total{font-size:22px;font-weight:800;color:#222;line-height:1}
+.ic-pcts{display:flex;gap:10px;font-size:11px;font-weight:600}
+.ic-bar{height:5px;border-radius:3px;background:#f0f0f0;overflow:hidden;display:flex}
+.ic-bar-pos{background:#52c41a;height:100%}
+.ic-bar-neg{background:#ff4d4f;height:100%}
+.ic-bar-neu{background:#faad14;height:100%}
+/* ── INTENT BREAKDOWN ── */
+.intent-card{background:#fafbff;border:1px solid #e8eaf6;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.ic-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ic-name{font-weight:600;font-size:12px;color:#333}
+.ic-total{font-size:24px;font-weight:800;color:#222;line-height:1}
+.ic-pcts{display:flex;gap:8px;font-size:11px;font-weight:600;margin-top:2px}
+.ic-bar{height:5px;border-radius:3px;overflow:hidden;display:flex;margin-top:2px}
+.ic-bar-pos{background:#52c41a;height:100%}
+.ic-bar-neg{background:#ff4d4f;height:100%}
+.ic-bar-neu{background:#faad14;height:100%}
+/* ── INTENT TOGGLE BUTTONS ── */
+.intent-toggle{border-radius:20px;padding:3px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+.intent-toggle:not(.active){background:#fff !important;color:#999 !important;border-color:#ddd !important}
+/* ── LOCATION CHART ── */
+/* ── DETAIL VIEW ── */
+.detail-view{display:none;position:fixed;inset:0;background:#f5f6fa;z-index:500;overflow-y:auto}
+.detail-view.open{display:block}
+.detail-topbar{background:#fff;border-bottom:1px solid #e8e8e8;padding:12px 20px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:10}
+.back-btn{background:none;border:none;cursor:pointer;font-size:13px;color:#4b52d4;font-weight:600;display:flex;align-items:center;gap:4px}
+.back-btn:hover{text-decoration:underline}
+.detail-crumb{font-size:12px;color:#666}
+.detail-crumb b{color:#333}
+.detail-stats-bar{background:#fff;border-bottom:1px solid #e8e8e8;padding:12px 20px;display:flex;gap:32px}
+.ds-item{}
+.ds-label{font-size:10px;color:#888;margin-bottom:3px}
+.ds-val{font-size:20px;font-weight:800}
+.ds-sub{font-size:11px;color:#52c41a;font-weight:600}
+.ds-sub.neg{color:#ff4d4f}
+.ds-sub.neu{color:#faad14}
+.detail-tabs-bar{background:#fff;border-bottom:1px solid #e8e8e8;padding:0 20px;display:flex;gap:0}
+.detail-tab{padding:10px 14px;font-size:12px;cursor:pointer;border:none;background:none;color:#666;border-bottom:2px solid transparent}
+.detail-tab.active{color:#4b52d4;border-bottom-color:#4b52d4;font-weight:600}
+.detail-subtabs{padding:12px 20px 0;display:flex;gap:12px}
+.detail-subtab{padding:6px 0;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:#666}
+.detail-subtab.active{color:#4b52d4;border-bottom-color:#4b52d4;font-weight:600}
+.detail-count-bar{padding:8px 20px;font-size:12px;color:#666;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid #f0f0f0}
+.detail-body{padding:16px 20px}
+/* ── POST CARDS ── */
+.posts-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.post-card{background:#fff;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden;transition:box-shadow .15s}
+.post-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);border-color:#4b52d4}
+.pc-header{padding:10px 12px;display:flex;align-items:flex-start;gap:8px}
+.pc-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.pc-info{flex:1;min-width:0}
+.pc-name{font-weight:700;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-handle{font-size:11px;color:#888}
+.pc-date{font-size:10px;color:#aaa;white-space:nowrap;margin-left:auto}
+.pc-text{padding:0 12px;font-size:12px;color:#444;line-height:1.6;max-height:72px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
+.pc-readmore{padding:2px 12px 8px;font-size:11px;color:#4b52d4;cursor:pointer}
+.pc-thumb{width:100%;height:120px;object-fit:cover;display:block;background:var(--thumb-bg,#f0f0f0)}
+.pc-stats{padding:8px 12px;display:flex;gap:10px;border-top:1px solid #f0f0f0}
+.pc-stat{display:flex;align-items:center;gap:3px;font-size:11px;color:#888}
+.pc-metrics{padding:8px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;border-top:1px solid #f0f0f0;background:#fafafa}
+.pc-metric-val{font-size:12px;font-weight:700;color:#4b52d4}
+.pc-metric-label{font-size:9px;color:#aaa;text-transform:uppercase}
+/* ── DETAIL CONTENT TABS ── */
+.detail-section{display:none}
+.detail-section.active{display:block}
+/* ── WORD CLOUD DETAIL ── */
+.detail-wc{padding:20px;min-height:200px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+/* ── SOURCE PIE ── */
+.source-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:10px}
+/* ── LOCATION TABLE ── */
+.loc-table{width:100%;border-collapse:collapse;font-size:12px}
+.loc-table th{text-align:left;padding:8px 12px;color:#888;font-weight:600;border-bottom:1px solid #f0f0f0;font-size:10px;text-transform:uppercase}
+.loc-table td{padding:8px 12px;border-bottom:1px solid #f8f8f8}
+.sent-bar{height:6px;border-radius:3px;background:#f0f0f0;overflow:hidden;margin-top:4px}
+.sent-bar-fill{height:100%;border-radius:3px}
+/* ── INFLUENCERS ── */
+.inf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px}
+.inf-card{background:#fafafa;border:1px solid #eee;border-radius:8px;padding:12px;display:flex;gap:10px;align-items:center}
+.inf-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px;flex-shrink:0}
+.inf-name{font-weight:700;font-size:12px}
+.inf-handle{font-size:11px;color:#888}
+.inf-metric{font-size:11px;color:#4b52d4;font-weight:600;margin-top:2px}
+/* ── CATEGORY CHART ── */
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:#f5f5f5}
+::-webkit-scrollbar-thumb{background:#ddd;border-radius:3px}
+@media(max-width:900px){.two-col,.three-col,.posts-grid{grid-template-columns:1fr}}
+/* ── TOPBAR ACTIONS ── */
+.topbar-actions{display:flex;align-items:center;gap:8px;margin-left:16px}
+.refresh-btn{display:flex;align-items:center;gap:5px;background:#4b52d4;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
+.refresh-btn:hover{background:#3840c0}
+.refresh-btn.loading svg{animation:spin .7s linear infinite}
+.settings-btn{background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:14px;color:#666;line-height:1}
+.settings-btn:hover{border-color:#4b52d4;color:#4b52d4}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#52c41a;flex-shrink:0}
+.live-dot.offline{background:#ff4d4f}
+.live-dot.loading-dot{background:#faad14;animation:pulse .8s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* ── SETTINGS MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:28px 28px 24px;width:520px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:15px;font-weight:700;margin-bottom:4px}
+.modal-sub{font-size:12px;color:#888;margin-bottom:20px}
+.modal-label{font-size:11px;font-weight:600;color:#555;margin-bottom:5px}
+.modal-input{width:100%;border:1px solid #d0d4e0;border-radius:6px;padding:9px 12px;font-size:12px;outline:none;transition:border .15s}
+.modal-input:focus{border-color:#4b52d4}
+.modal-hint{font-size:11px;color:#aaa;margin-top:5px}
+.modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.modal-btn{border-radius:6px;padding:7px 18px;font-size:12px;font-weight:600;cursor:pointer;border:none}
+.modal-btn.primary{background:#4b52d4;color:#fff}
+.modal-btn.primary:hover{background:#3840c0}
+.modal-btn.secondary{background:#f5f5f5;color:#555;border:1px solid #ddd}
+.modal-btn.secondary:hover{background:#eee}
+.modal-status{font-size:11px;padding:6px 10px;border-radius:5px;display:none;margin-top:10px}
+.modal-status.ok{background:#f6ffed;color:#52c41a;border:1px solid #b7eb8f;display:block}
+.modal-status.err{background:#fff2f0;color:#ff4d4f;border:1px solid #ffa39e;display:block}
+/* ── LOADING OVERLAY ── */
+.load-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,.8);z-index:800;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.load-overlay.open{display:flex}
+.load-spinner{width:40px;height:40px;border:3px solid #e8eaf6;border-top-color:#4b52d4;border-radius:50%;animation:spin .7s linear infinite}
+.load-text{font-size:13px;color:#666;font-weight:500}
+/* ── DATA STATUS BAR ── */
+.data-status{background:#f0f4ff;border-bottom:1px solid #dde3f5;padding:6px 20px;font-size:11px;color:#4b52d4;display:none;align-items:center;gap:8px}
+.data-status.show{display:flex}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="logo">Re-Aline</div>
+  <div class="brand-block">
+    <label>Brands</label>
+    <div class="brand-select-wrap">
+      <div class="brand-dot"></div>
+      <select id="brand-select" onchange="updateBrand()">
+        <option value="all">All Brands</option>
+        <option value="Ebco">Ebco</option>
+        <option value="Hettich">Hettich</option>
+      </select>
+    </div>
+  </div>
+  <div class="duration-block">
+    <label>Duration</label>
+    <span id="duration-text">181 day(s) (20 Nov 2025 – 19 May 2026)</span>
+  </div>
+  <div class="topbar-actions">
+    <div class="live-dot offline" id="live-dot" title="Data source status"></div>
+    <button class="refresh-btn" id="refresh-btn" onclick="fetchData()">
+      <svg id="refresh-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      Refresh
+    </button>
+    <button class="settings-btn" onclick="openSettings()" title="Configure n8n webhook">⚙</button>
+  </div>
+</header>
+
+<!-- DATA STATUS BAR -->
+<div class="data-status" id="data-status">
+  <span id="data-status-text"></span>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="load-overlay" id="load-overlay">
+  <div class="load-spinner"></div>
+  <div class="load-text" id="load-text">Fetching data from n8n…</div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal-box">
+    <div class="modal-title">n8n Webhook Configuration</div>
+    <div class="modal-sub">Enter the GET webhook URL from your n8n data workflow. The dashboard will call this on load and on Refresh.</div>
+    <div class="modal-label">Webhook URL</div>
+    <input class="modal-input" id="webhook-url-input" type="url" placeholder="https://your-n8n.com/webhook/social-analytics-data" />
+    <div class="modal-hint">Paste the URL from your n8n Webhook node (execution mode: Production)</div>
+    <div class="modal-status" id="modal-status"></div>
+    <div class="modal-actions">
+      <button class="modal-btn secondary" onclick="closeSettings()">Cancel</button>
+      <button class="modal-btn secondary" onclick="testWebhook()">Test Connection</button>
+      <button class="modal-btn primary" onclick="saveWebhook()">Save &amp; Load Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Contextual Pulse: Powered By AI</h1>
+  <p>This AI-driven dashboard analyzes key context and sentiment around the brand, offering deep insights into user sentiment, opinions, intent and feedback.</p>
+</div>
+
+<!-- QUICK FILTERS -->
+<div class="qf">
+  <span class="qf-star">★</span>
+  <span>Saved Quick Filters:</span>
+  <span class="qf-pill">No quick filters pinned</span>
+</div>
+
+<!-- MAIN TABS -->
+<nav class="main-tabs">
+  <button class="main-tab active" onclick="showMainTab('cva',this)">Customer Voice Analysis</button>
+  <button class="main-tab" onclick="showMainTab('kco',this)">Key Context &amp; Opinions</button>
+  <button class="main-tab" onclick="showMainTab('ea',this)">Entity Analysis</button>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     TAB 1: CUSTOMER VOICE ANALYSIS
+══════════════════════════════════════════ -->
+<div id="page-cva" class="page active">
+
+  <!-- Section header -->
+  <div class="sec-header">
+    <span class="sec-header-title">Customer Voice Analysis</span>
+    <div class="sec-header-actions">
+      <button class="icon-btn">⟳</button>
+      <button class="icon-btn">📅</button>
+      <button class="icon-btn">▼</button>
+    </div>
+  </div>
+
+  <!-- Customer Voice Breakdown -->
+  <div class="sub-section">
+    <div class="sub-title">
+      Customer Voice Breakdown
+      <button class="export-btn">⊞ Export</button>
+    </div>
+    <div class="voice-row">
+      <div class="voice-card">
+        <div class="vc-label">Mention Count</div>
+        <div class="vc-val" id="vc-total">480</div>
+      </div>
+      <div class="voice-card pos clickable" onclick="openDetail('positive')">
+        <div class="vc-label">Positive</div>
+        <div class="vc-val" id="vc-pos">228
+          <span class="vc-pct"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#52c41a" stroke-width="1.5"/><path d="M5 8.5l2 2 4-4" stroke="#52c41a" stroke-width="1.5" stroke-linecap="round"/></svg><span id="vc-pos-pct">47.5 %</span></span>
+        </div>
+      </div>
+      <div class="voice-card neg clickable" onclick="openDetail('negative')">
+        <div class="vc-label">Negative</div>
+        <div class="vc-val" id="vc-neg">151
+          <span class="vc-pct" style="color:#ff4d4f"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#ff4d4f" stroke-width="1.5"/><path d="M5 8l6 0M8 5l0 6" stroke="#ff4d4f" stroke-width="1.5" stroke-linecap="round"/></svg><span id="vc-neg-pct">31.46 %</span></span>
+        </div>
+      </div>
+      <div class="voice-card neu clickable" onclick="openDetail('neutral')">
+        <div class="vc-label">Neutral</div>
+        <div class="vc-val" id="vc-neu">101
+          <span class="vc-pct" style="color:#faad14"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#faad14" stroke-width="1.5"/><path d="M5 8h6" stroke="#faad14" stroke-width="1.5" stroke-linecap="round"/></svg><span id="vc-neu-pct">21.04 %</span></span>
+        </div>
+      </div>
+      <div class="unique-panel">
+        <div class="vc-label">Unique User</div>
+        <div class="vc-val" id="vc-unique">343</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOV + Trend -->
+  <div class="two-col" style="margin-top:12px">
+    <div class="panel">
+      <div class="panel-title">Customer Feedback SOV <button class="icon-btn">≡</button></div>
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div class="chart-wrap" style="width:180px;height:180px;flex-shrink:0">
+          <canvas id="chart-sov"></canvas>
+        </div>
+        <div class="sov-legend" id="sov-legend" style="flex:1;margin-top:10px"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">
+        Customer Voice Trend Analysis
+        <select id="trend-period" onchange="renderTrend()">
+          <option>Monthly</option>
+          <option>Weekly</option>
+        </select>
+      </div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-trend"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Sentiment Breakdown -->
+  <div class="panel" style="margin-top:12px">
+    <div class="panel-title">Customer Feedback Sentiment Breakdown</div>
+    <div class="chart-wrap" style="height:220px"><canvas id="chart-sent-breakdown"></canvas></div>
+    <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:11px">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#52c41a;display:inline-block"></span>Positive</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#ff4d4f;display:inline-block"></span>Negative</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:#faad14;display:inline-block"></span>Neutral</span>
+    </div>
+  </div>
+
+  <!-- Sentiment-wise Intent Breakdown -->
+  <div class="panel" style="margin-top:12px">
+    <div class="panel-title">Overall Sentiment-wise Intent Around Breakdown
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="intent-toggle active" data-idx="0" onclick="toggleIntentDataset(this)" style="background:#4b52d4;color:#fff;border:1px solid #4b52d4">Total</button>
+        <button class="intent-toggle active" data-idx="1" onclick="toggleIntentDataset(this)" style="background:#52c41a;color:#fff;border:1px solid #52c41a">Positive</button>
+        <button class="intent-toggle active" data-idx="2" onclick="toggleIntentDataset(this)" style="background:#ff4d4f;color:#fff;border:1px solid #ff4d4f">Negative</button>
+        <button class="icon-btn">≡</button>
+      </div>
+    </div>
+    <div class="chart-wrap" style="height:280px"><canvas id="chart-intent-breakdown"></canvas></div>
+  </div>
+
+  <!-- Contextual Customer Intent -->
+  <div class="panel" style="margin-top:12px">
+    <div class="panel-title">Contextual Customer Intent <button class="icon-btn">≡</button></div>
+    <div id="contextual-intent" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:4px 0"></div>
+  </div>
+
+  <!-- Key Context Network -->
+  <div class="panel" style="margin-top:12px">
+    <div class="panel-title">Key Context Around Customer Voice
+      <div style="display:flex;gap:6px">
+        <button class="icon-btn">🔍</button>
+        <button class="icon-btn">▼ All</button>
+      </div>
+    </div>
+    <div class="network" id="network-cva"></div>
+    <div style="padding:8px 0 0;display:flex;gap:8px">
+      <button class="icon-btn" style="font-size:10px">Hierarchy Structure ▼</button>
+      <button class="icon-btn" style="font-size:10px">Node Explorer Guide ▼</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 2: KEY CONTEXT & OPINIONS
+══════════════════════════════════════════ -->
+<div id="page-kco" class="page">
+
+  <div class="sec-header" style="margin-top:0">
+    <span class="sec-header-title">Key Context &amp; Opinions</span>
+    <div class="sec-header-actions">
+      <button class="icon-btn">⟳</button><button class="icon-btn">📅</button><button class="icon-btn">▼</button>
+    </div>
+  </div>
+
+  <!-- Top Key Context Treemap -->
+  <div class="panel" style="margin-top:12px">
+    <div class="panel-title">Top Key Context <button class="icon-btn">≡</button></div>
+    <div class="treemap" id="treemap" style="min-height:200px"></div>
+    <div style="margin-top:8px;height:8px;border-radius:4px;background:linear-gradient(to right,#9b9de8,#5c63d4,#3a42c8);"></div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#888;margin-top:2px;padding:0 2px">
+      <span>0</span><span>140</span>
+    </div>
+  </div>
+
+  <!-- Bubble scatter -->
+  <div class="panel" style="margin-top:12px">
+    <div class="panel-title">Key Context vs User Sentiment <button class="icon-btn">≡</button></div>
+    <div class="chart-wrap" style="height:280px"><canvas id="chart-bubble"></canvas></div>
+    <div id="bubble-legend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:10px;padding:0 4px"></div>
+  </div>
+
+  <!-- Opinions Network -->
+  <div class="panel" style="margin-top:12px">
+    <div class="panel-title">Opinions Around Key Context
+      <button style="background:#1a8f6e;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer">Relation Counts Mode</button>
+    </div>
+    <div class="network" id="network-opinions" style="min-height:320px"></div>
+    <div style="padding:8px 0 0;display:flex;gap:8px">
+      <button class="icon-btn" style="font-size:10px">Hierarchy Structure ▼</button>
+      <button class="icon-btn" style="font-size:10px">Node Explorer Guide ▼</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 3: ENTITY ANALYSIS
+══════════════════════════════════════════ -->
+<div id="page-ea" class="page">
+
+  <div class="sec-header" style="margin-top:0">
+    <span class="sec-header-title">Entity Analysis</span>
+    <div class="sec-header-actions">
+      <button class="icon-btn">⟳</button><button class="icon-btn">📅</button><button class="icon-btn">▼</button>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top:12px">
+    <div class="panel">
+      <div class="panel-title">Cross Mentioned Brands <button class="icon-btn">≡</button></div>
+      <div class="word-cloud" id="wc-brands" style="min-height:160px"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Most Mentioned Handles <button class="icon-btn">≡</button></div>
+      <div class="word-cloud" id="wc-handles" style="min-height:160px"></div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top:12px">
+    <div class="panel">
+      <div class="panel-title">Most Mentioned Products <button class="icon-btn">≡</button></div>
+      <div class="word-cloud" id="wc-products" style="min-height:160px"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Product Wise Sentiment</div>
+      <div class="sent-circles" id="sent-circles"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:8px;font-size:11px">
+        <span><span style="width:10px;height:10px;border-radius:50%;background:#52c41a;display:inline-block;margin-right:4px"></span>Positive</span>
+        <span><span style="width:10px;height:10px;border-radius:50%;background:#ff4d4f;display:inline-block;margin-right:4px"></span>Negative</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:12px">
+    <div class="panel-title">Sentiment Wise Mentioned Location <button class="icon-btn">≡</button></div>
+    <div class="chart-wrap" style="height:200px"><canvas id="chart-location"></canvas></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DETAIL VIEW (Positive / Negative / Neutral drill-down)
+══════════════════════════════════════════ -->
+<div id="detail-view" class="detail-view">
+  <div class="detail-topbar">
+    <button class="back-btn" onclick="closeDetail()">← Back</button>
+    <div class="detail-crumb" id="detail-crumb"></div>
+  </div>
+
+  <div class="detail-stats-bar" id="detail-stats-bar"></div>
+
+  <div class="detail-tabs-bar">
+    <button class="detail-tab active" onclick="showDetailTab('mentions',this)">Mentions</button>
+    <button class="detail-tab" onclick="showDetailTab('wordcloud',this)">Word Cloud</button>
+    <button class="detail-tab" onclick="showDetailTab('category',this)">Category</button>
+    <button class="detail-tab" onclick="showDetailTab('influencers',this)">Influencers</button>
+    <button class="detail-tab" onclick="showDetailTab('source',this)">Source Of Post</button>
+    <button class="detail-tab" onclick="showDetailTab('location',this)">Location Profiles</button>
+  </div>
+
+  <div class="detail-body">
+
+    <!-- MENTIONS -->
+    <div id="dtab-mentions" class="detail-section active">
+      <div style="display:flex;gap:12px;border-bottom:1px solid #eee;padding-bottom:10px;margin-bottom:12px">
+        <button class="detail-subtab active" onclick="showSubTab(this,'social')" data-target="social">Social Media (<span id="social-count">0</span>)</button>
+        <button class="detail-subtab" onclick="showSubTab(this,'news')" data-target="news">News (0)</button>
+        <button class="detail-subtab" onclick="showSubTab(this,'reviews')" data-target="reviews">Reviews (0)</button>
+      </div>
+      <div id="subtab-social">
+        <div style="font-size:12px;color:#888;margin-bottom:12px" id="showing-count"></div>
+        <div class="posts-grid" id="posts-grid"></div>
+      </div>
+      <div id="subtab-news" style="display:none;padding:20px;text-align:center;color:#aaa">No news articles found.</div>
+      <div id="subtab-reviews" style="display:none;padding:20px;text-align:center;color:#aaa">No reviews found.</div>
+    </div>
+
+    <!-- WORD CLOUD -->
+    <div id="dtab-wordcloud" class="detail-section">
+      <div class="detail-wc" id="detail-wc"></div>
+    </div>
+
+    <!-- CATEGORY -->
+    <div id="dtab-category" class="detail-section">
+      <div class="chart-wrap" style="height:260px;max-width:600px;margin:16px auto"><canvas id="chart-detail-cat"></canvas></div>
+    </div>
+
+    <!-- INFLUENCERS -->
+    <div id="dtab-influencers" class="detail-section">
+      <div class="inf-grid" id="inf-grid"></div>
+    </div>
+
+    <!-- SOURCE OF POST -->
+    <div id="dtab-source" class="detail-section">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:10px">
+        <div><canvas id="chart-source" style="max-height:220px"></canvas></div>
+        <div id="source-table" style="font-size:12px"></div>
+      </div>
+    </div>
+
+    <!-- LOCATION PROFILES -->
+    <div id="dtab-location" class="detail-section">
+      <table class="loc-table" id="loc-table-detail">
+        <thead><tr><th>Location</th><th>Mentions</th><th>Sentiment</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════
+const BRAND_DATA = {
+  all:    { total:87,  pos:56,  neg:5,   neu:26,  unique:5,   posPct:64.4, negPct:5.7,  neuPct:29.9 },
+  Ebco:   { total:12,  pos:10,  neg:0,   neu:2,   unique:1,   posPct:83.3, negPct:0,    neuPct:16.7 },
+  Hettich:{ total:75,  pos:46,  neg:5,   neu:24,  unique:4,   posPct:61.3, negPct:6.7,  neuPct:32.0 },
+};
+
+const PLATFORM_SOV_DATA = {
+  all:[
+    {name:'Instagram', count:24, pct:27.6, color:'#eb7ea8'},
+    {name:'LinkedIn',  count:10, pct:11.5, color:'#5b8dee'},
+    {name:'YouTube',   count:30, pct:34.5, color:'#f16060'},
+    {name:'Facebook',  count:3,  pct:3.4,  color:'#5b9ded'},
+    {name:'Twitter',   count:20, pct:23.0, color:'#5acce6'},
+  ],
+  Ebco:[
+    {name:'Instagram', count:12, pct:100,  color:'#eb7ea8'},
+  ],
+  Hettich:[
+    {name:'Instagram', count:12, pct:16.0, color:'#eb7ea8'},
+    {name:'LinkedIn',  count:10, pct:13.3, color:'#5b8dee'},
+    {name:'YouTube',   count:30, pct:40.0, color:'#f16060'},
+    {name:'Facebook',  count:3,  pct:4.0,  color:'#5b9ded'},
+    {name:'Twitter',   count:20, pct:26.7, color:'#5acce6'},
+  ],
+};
+
+const MONTHS = ['Mar 2026','Apr 2026','May 2026'];
+const TREND_DATA = {
+  all:{
+    Instagram:[7,0,17],
+    LinkedIn: [0,0,10],
+    Facebook: [0,0,3],
+    YouTube:  [0,0,0],
+    Twitter:  [0,0,0],
+  },
+  Ebco:{
+    Instagram:[4,0,8],
+    LinkedIn: [0,0,0],
+    Facebook: [0,0,0],
+    YouTube:  [0,0,0],
+    Twitter:  [0,0,0],
+  },
+  Hettich:{
+    Instagram:[3,0,9],
+    LinkedIn: [0,0,10],
+    Facebook: [0,0,3],
+    YouTube:  [0,0,0],
+    Twitter:  [0,0,0],
+  },
+};
+
+const SENT_BREAKDOWN = {
+  all:{
+    Instagram:{pos:22, neg:0,  neu:2},
+    LinkedIn: {pos:6,  neg:0,  neu:4},
+    Facebook: {pos:3,  neg:0,  neu:0},
+    YouTube:  {pos:20, neg:0,  neu:10},
+    Twitter:  {pos:5,  neg:5,  neu:10},
+  },
+  Ebco:{
+    Instagram:{pos:10, neg:0, neu:2},
+    LinkedIn: {pos:0,  neg:0, neu:0},
+    Facebook: {pos:0,  neg:0, neu:0},
+    YouTube:  {pos:0,  neg:0, neu:0},
+    Twitter:  {pos:0,  neg:0, neu:0},
+  },
+  Hettich:{
+    Instagram:{pos:12, neg:0, neu:0},
+    LinkedIn: {pos:6,  neg:0, neu:4},
+    Facebook: {pos:3,  neg:0, neu:0},
+    YouTube:  {pos:20, neg:0, neu:10},
+    Twitter:  {pos:5,  neg:5, neu:10},
+  },
+};
+['Ebco','Hettich','Hafele'].forEach(b=>{
+  SENT_BREAKDOWN[b]={};
+  const d=SENT_BREAKDOWN.all;
+  Object.keys(d).forEach(plt=>{
+    const f=b==='Ebco'?.25:b==='Hettich'?.45:.4;
+    SENT_BREAKDOWN[b][plt]={
+      pos:Math.round(d[plt].pos*f),
+      neg:Math.round(d[plt].neg*f),
+      neu:Math.round(d[plt].neu*f)
+    };
+  });
+});
+
+const KEYWORDS = [
+  {name:'Storage Solutions',   count:139, pct:21.8, nss:8.2,  color:'#4b52d4'},
+  {name:'Furniture Design',    count:114, pct:17.9, nss:6.5,  color:'#6b73e4'},
+  {name:'Smart Living',        count:104, pct:16.3, nss:7.8,  color:'#7b83e8'},
+  {name:'Wardrobe',            count:50,  pct:7.8,  nss:5.2,  color:'#8b93ec'},
+  {name:'Home Decor',          count:46,  pct:7.2,  nss:6.8,  color:'#9ba3f0'},
+  {name:'Kitchen',             count:43,  pct:6.7,  nss:4.5,  color:'#abb3f4'},
+  {name:'Organised Space',     count:32,  pct:5.0,  nss:7.1,  color:'#bbc3f8'},
+  {name:'Innovation',          count:29,  pct:4.5,  nss:8.9,  color:'#c0c7fa'},
+  {name:'Security',            count:26,  pct:4.1,  nss:-2.3, color:'#d0d7fc'},
+  {name:'Space Optimization',  count:22,  pct:3.4,  nss:5.6,  color:'#e0e7fe'},
+  {name:'Brand Milestone',     count:10,  pct:1.6,  nss:9.1,  color:'#5b8dee'},
+  {name:'Customer Delight',    count:8,   pct:1.3,  nss:8.4,  color:'#6b9df1'},
+  {name:'Design Awards',       count:5,   pct:0.8,  nss:9.5,  color:'#7badf4'},
+];
+
+const WC_BRANDS = [
+  {t:'Hettich',s:72,c:'#4b52d4'},{t:'Hafele',s:64,c:'#7b3ec8'},{t:'IKEA',s:52,c:'#c43a5b'},
+  {t:'Godrej Interio',s:44,c:'#2e9e5b'},{t:'Blum',s:40,c:'#d4880a'},{t:'Dorma',s:36,c:'#0a6ebf'},
+  {t:'Feather Lite',s:30,c:'#8e44ad'},{t:'Merino Laminates',s:26,c:'#16a085'},{t:'Centuryply',s:22,c:'#c0392b'},
+  {t:'Greenply',s:20,c:'#27ae60'},{t:'Architect India',s:18,c:'#2980b9'},{t:'Bosch',s:16,c:'#d35400'},
+  {t:'Asian Paints',s:14,c:'#8e44ad'},{t:'Pidilite',s:12,c:'#1abc9c'},{t:'Sleek Kitchens',s:10,c:'#e74c3c'},
+];
+const WC_HANDLES = [
+  {t:'@hettich_india',s:72,c:'#4b52d4'},{t:'@hafele_india',s:60,c:'#7b3ec8'},{t:'@ebcosolutions',s:56,c:'#c43a5b'},
+  {t:'@interiordesign_india',s:44,c:'#2e9e5b'},{t:'@architectindia',s:38,c:'#d4880a'},{t:'@homestyle_in',s:34,c:'#0a6ebf'},
+  {t:'@moderndecor',s:28,c:'#8e44ad'},{t:'@smartliving_in',s:24,c:'#16a085'},{t:'@kitchendesigns',s:20,c:'#c0392b'},
+  {t:'@furnitureindia',s:18,c:'#27ae60'},{t:'@wardrobegoals',s:16,c:'#2980b9'},{t:'@storagepro',s:14,c:'#e67e22'},
+];
+const WC_PRODUCTS = [
+  {t:'Coat Hanger System',s:72,c:'#4b52d4'},{t:'Shoe Rack',s:64,c:'#eb7ea8'},{t:'Cupboard Pullout',s:58,c:'#5b8dee'},
+  {t:'Smart Light Sensor',s:50,c:'#f16060'},{t:'Wardrobe Lift',s:44,c:'#5acce6'},{t:'Kitchen Pullout',s:38,c:'#52c41a'},
+  {t:'Pivot Mirror',s:32,c:'#faad14'},{t:'Soft Close Hinges',s:28,c:'#722ed1'},{t:'Drawer Slides',s:24,c:'#eb2f96'},
+  {t:'Cabinet Handles',s:20,c:'#13c2c2'},{t:'Magic Corner',s:18,c:'#fa8c16'},{t:'Tandem Box',s:14,c:'#1890ff'},
+];
+
+const LOCATIONS = [
+  {name:'India',       pos:52, neg:18, neu:10},
+  {name:'Mumbai',      pos:28, neg:10, neu:6},
+  {name:'Delhi',       pos:22, neg:8,  neu:4},
+  {name:'Gurugram',    pos:16, neg:5,  neu:3},
+  {name:'Bangalore',   pos:12, neg:4,  neu:2},
+  {name:'Chennai',     pos:9,  neg:3,  neu:2},
+  {name:'Pune',        pos:7,  neg:3,  neu:1},
+  {name:'Hyderabad',   pos:6,  neg:2,  neu:1},
+];
+
+const PRODUCTS_SENT = [
+  {name:'Coat Hanger',  pos:85, neg:15, size:80},
+  {name:'Shoe Rack',    pos:78, neg:22, size:72},
+  {name:'Kitchen Pull', pos:72, neg:28, size:64},
+  {name:'Smart Light',  pos:90, neg:10, size:56},
+  {name:'Wardrobe Lift',pos:68, neg:32, size:50},
+  {name:'Pivot Mirror', pos:82, neg:18, size:44},
+];
+
+// All raw posts
+const ALL_POSTS = [
+  // ── EBCO INSTAGRAM ──
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'28 May 2026',text:'Step inside the EBCO National Discovery Center and explore our complete range of hardware solutions, furniture fittings and home organisation systems, all in one place.',likes:43,comments:1,shares:0,views:0,engagement:44,engRate:'1.1%',reach:'4.2K',impressions:'6.3K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DY4NFOJirYv/'},
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'18 May 2026',text:'Let your bedroom be your calm. With effortless storage solutions and thoughtfully designed spaces, every corner of your room works together to bring you peace.',likes:41,comments:3,shares:0,views:0,engagement:44,engRate:'1.1%',reach:'4.2K',impressions:'6.2K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYeuWI6k537/'},
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'16 May 2026',text:'Your favourite shoes now have a place inside your wardrobe. Easy pullout - Effortless access and a clear view of your collection. Push back. Soft close. Sleek design.',likes:99,comments:3,shares:0,views:0,engagement:102,engRate:'1.1%',reach:'9.7K',impressions:'14.5K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYZRTmVI0Ti/'},
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'12 May 2026',text:'Lights that work around you. The Smart Light has been designed for everyday convenience, allowing you to choose between motion sensor or switch control. Powered by 3 AAA batteries.',likes:43,comments:1,shares:0,views:0,engagement:44,engRate:'1.1%',reach:'4.2K',impressions:'6.3K',sentiment:'neutral',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYPRlDEkyWX/'},
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'10 May 2026',text:'Celebrating the women who make every space feel like home while effortlessly balancing a hundred roles every single day. To the moms who do it all — Happy Mother\'s Day! 💖',likes:63,comments:0,shares:0,views:0,engagement:63,engRate:'1.1%',reach:'6.0K',impressions:'9.0K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYJRfOiAuRH/'},
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'09 May 2026',text:'Cupboard Pullout System - designed for narrow cabinets between 200 to 400 mm, offering smooth pull-out access with everything in full view. Available in multiple lengths for a precise fit.',likes:43,comments:1,shares:0,views:0,engagement:44,engRate:'1.1%',reach:'4.2K',impressions:'6.3K',sentiment:'neutral',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYH21gDAp2S/'},
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'06 May 2026',text:'Experience the smoothest wardrobe access with Ebco\'s Coat Hanger! Top-wardrobe access made simple — Pull down effortlessly. Locks in place. Smooth hydraulic movement.',likes:74,comments:0,shares:0,views:0,engagement:74,engRate:'1.1%',reach:'7.0K',impressions:'10.5K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYAA7vdi1DI/'},
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'04 May 2026',text:'Maximise storage in narrow cabinets with a sleek Zinc White finish. Perfect for spaces 20-40 cm wide, this system fits seamlessly and keeps everything organised with ease.',likes:61,comments:0,shares:0,views:0,engagement:61,engRate:'1.1%',reach:'5.8K',impressions:'8.7K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DX6db7mE__w/'},
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'21 Mar 2026',text:'Celebrate Eid in a space that\'s as organized as your celebrations. Ebco\'s smart storage brings efficiency and joy to every moment. Eid Mubarak to you and your family! 🌙',likes:65,comments:3,shares:0,views:0,engagement:68,engRate:'1.1%',reach:'6.4K',impressions:'9.7K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DWIdqb8DDbO/'},
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'19 Mar 2026',text:'This Gudi Padwa, as festive dishes fill the kitchen with flavor, EBCO\'s smart storage ensures everything stays organised and accessible — because a well-planned kitchen makes every celebration effortless.',likes:85,comments:2,shares:0,views:0,engagement:87,engRate:'1.1%',reach:'8.3K',impressions:'12.4K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DWDPL3Rj4YX/'},
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'10 Mar 2026',text:'These 5 wardrobe additions are total game changers. From smart mirrors to space-saving pullouts, every detail is designed to maximise space, improve access, and keep your wardrobe effortlessly organised.',likes:138,comments:1,shares:0,views:0,engagement:139,engRate:'1.1%',reach:'13.2K',impressions:'19.8K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DVtOCFMggFR/'},
+  {brand:'Ebco',platform:'instagram',handle:'@ebcosolutions',name:'Ebco Solutions',date:'09 Mar 2026',text:'The cheers were loud. The victory was louder. The Men in Blue bring the World Cup home. Congratulations to Team India on a phenomenal victory, and to Jasprit Bumrah for shining through!',likes:120,comments:3,shares:0,views:0,engagement:123,engRate:'1.1%',reach:'11.7K',impressions:'17.5K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DVqy7_1AtlV/'},
+  // ── HETTICH INSTAGRAM ──
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'26 May 2026',text:'With Hettich Magic Lights, furniture comes alive through beautifully focused lighting that highlights textures, objects, and design elements, making your space feel warmer, more inviting, and magical.',likes:10078,comments:2,shares:0,views:0,engagement:10080,engRate:'1.1%',reach:'957.6K',impressions:'1.4M',sentiment:'positive',color:'#eb7ea8',thumb:'https://i.ytimg.com/vi/jqsHkNWLsn0/hqdefault.jpg',url:'https://www.instagram.com/p/DYzUUakM6AT/'},
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'25 May 2026',text:'From the gentle glide of the doors to the soft, controlled closing, Hettich SlideLine16 Plus transforms everyday storage into a quieter, more refined experience.',likes:4283,comments:0,shares:0,views:0,engagement:4283,engRate:'1.1%',reach:'406.9K',impressions:'610.3K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYw_iq-sP25/'},
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'24 May 2026',text:'Designed around the philosophy of elegance in minimalism, AvoriTech combines a refined 8mm profile, concealed engineering and smooth, silent performance to deliver a modern, luxurious furniture experience.',likes:3542,comments:2,shares:0,views:0,engagement:3544,engRate:'1.1%',reach:'336.7K',impressions:'505.0K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYuETUujHqI/'},
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'23 May 2026',text:'Enter dark mode with the Onsys Magma Black Hinge. Its striking black finish enhances modern cabinetry while delivering the smooth, reliable performance that defines Hettich engineering.',likes:4119,comments:1,shares:0,views:0,engagement:4120,engRate:'1.1%',reach:'391.4K',impressions:'587.1K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYrfbD6sZEs/'},
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'22 May 2026',text:'Your dream space is all about the details. Take the first step towards your dream space. Book your free design consultation today. #Hettich #HettichIndia #ItsAllInHettich',likes:7143,comments:1,shares:0,views:0,engagement:7144,engRate:'1.1%',reach:'678.7K',impressions:'1.0M',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYo7PrWsR2T/'},
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'17 May 2026',text:'A pinch of this, a handful of that, and a whole lot of you. Because that\'s what makes it magical. #Hettich #HettichIndia #HettichXBlaupunkt #WorldBakingDay',likes:4841,comments:6,shares:0,views:0,engagement:4847,engRate:'1.1%',reach:'460.4K',impressions:'690.7K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYbE8fnjOqy/'},
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'16 May 2026',text:'Every shelf holds a story, of places you\'ve been, moments you\'ve kept, and passions that define you. The right light brings it all to life, like magic. Happy International Day of Lights.',likes:7411,comments:0,shares:0,views:0,engagement:7411,engRate:'1.1%',reach:'704.0K',impressions:'1.1M',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYYgDViM2yf/'},
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'15 May 2026',text:'Together, yet not always present. Until the noise fades and it feels like family again. Celebrating the magic of family this International Day of Families.',likes:4085,comments:2,shares:0,views:0,engagement:4087,engRate:'1.1%',reach:'388.3K',impressions:'582.4K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYWCOuLscYw/'},
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'11 May 2026',text:'As an architect and interior designer, there is nothing more gratifying than witnessing a space where design truly serves function. Visit Hettich Exclusive by Haus Concepts in Mylapore.',likes:206,comments:24,shares:0,views:0,engagement:230,engRate:'1.1%',reach:'21.7K',impressions:'32.6K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DYMwVPmuR4Q/'},
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'14 Mar 2026',text:'25 years in India. Countless spaces transformed. One promise of innovation that continues to evolve. Celebrate with magical savings — Flat 25% OFF + Additional 25% OFF!',likes:113,comments:0,shares:0,views:0,engagement:113,engRate:'1.1%',reach:'10.7K',impressions:'16.1K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DV22SbljJJ7/'},
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'14 Mar 2026',text:'25 years in India. Countless spaces transformed. One promise of innovation that continues to evolve. Celebrate Hettich\'s journey with magical savings on solutions crafted for modern homes.',likes:99,comments:3,shares:0,views:0,engagement:102,engRate:'1.1%',reach:'9.7K',impressions:'14.5K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DV22Pf2DKVw/'},
+  {brand:'Hettich',platform:'instagram',handle:'@hettichindia',name:'Hettich India',date:'14 Mar 2026',text:'25 years in India. Countless spaces transformed. Get Flat 25% OFF + Additional 25% OFF. Apply the coupon code at checkout to unlock the additional discount.',likes:84,comments:0,shares:0,views:0,engagement:84,engRate:'1.1%',reach:'8.0K',impressions:'12.0K',sentiment:'positive',color:'#eb7ea8',thumb:'',url:'https://www.instagram.com/p/DV22K1fDJ7M/'},
+  // ── HETTICH LINKEDIN ──
+  {brand:'Hettich',platform:'linkedin',handle:'@hettich-india',name:'Hettich India',date:'27 May 2026',text:'Great kitchens are not just about how they look. They are defined by how they perform. A new generation of kitchen solutions is blending functionality, safety, and design into a single, seamless experience.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5b8dee',thumb:'',url:'https://www.linkedin.com/posts/hettich-india_the-culinary-magic-of-chimney-hobs-a-kitchen-activity-7465437391395328001-hC8o'},
+  {brand:'Hettich',platform:'linkedin',handle:'@hettich-india',name:'Hettich India',date:'21 May 2026',text:'Had an enriching experience hosting the Global Production Network team in India. The visit covered our manufacturing plants in Vadodara and Indore, highlighting India\'s growing manufacturing competitiveness.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#5b8dee',thumb:'',url:'https://www.linkedin.com/posts/hettich-india_showcasing-indias-manufacturing-excellence-activity-7463202299797106689-cnuu'},
+  {brand:'Hettich',platform:'linkedin',handle:'@hettich-india',name:'Hettich India',date:'19 May 2026',text:'25 years ago, we began our India journey. Today, we stand as a name that helped shape the future of furniture fittings in the country. 25 years later, we\'re still building what\'s next. Built to Lead.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#5b8dee',thumb:'',url:'https://www.linkedin.com/posts/hettich-india_hettichindia-itsallinhettich-makeinindia-activity-7462465557586599936-R9CH'},
+  {brand:'Hettich',platform:'linkedin',handle:'@hettich-india',name:'Hettich India',date:'17 May 2026',text:'A pinch of this, a handful of that, and a whole lot of you. Because that\'s what makes it magical. Buy Blaupunkt Microwave Oven Online. Visit Nearest Hettich Experience Centre.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5b8dee',thumb:'',url:'https://www.linkedin.com/posts/hettich-india_hettich-hettichindia-hettichxblaupunkt-activity-7461603912626634753-mZ6a'},
+  {brand:'Hettich',platform:'linkedin',handle:'@hettich-india',name:'Hettich India',date:'16 May 2026',text:'Every shelf holds a story, of places you\'ve been, moments you\'ve kept, and passions that define you. The right light brings it all to life, like magic. Happy International Day of Lights.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5b8dee',thumb:'',url:'https://www.linkedin.com/posts/hettich-india_hettich-hettichindia-itsallinhettich-activity-7461241524153081856-lwb4'},
+  {brand:'Hettich',platform:'linkedin',handle:'@hettich-india',name:'Hettich India',date:'15 May 2026',text:'This Mother\'s Day, we took a moment to think about the people behind our people. Long before they became part of Hettich, they were your child. We thank you for bringing them up as well as you have. Happy Mother\'s Day.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#5b8dee',thumb:'',url:'https://www.linkedin.com/posts/hettich-india_mothersday-itsallinus-hettichindia-activity-7461008267335524352-Co0y'},
+  {brand:'Hettich',platform:'linkedin',handle:'@hettich-india',name:'Hettich India',date:'15 May 2026',text:'Together, yet not always present. Until the noise fades and it feels like family again. Celebrating the magic of family this International Day of Families.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5b8dee',thumb:'',url:'https://www.linkedin.com/posts/hettich-india_hettich-hettichindia-itsallinhettich-activity-7460894333420982272-sbVb'},
+  {brand:'Hettich',platform:'linkedin',handle:'@hettich-india',name:'Hettich India',date:'11 May 2026',text:'Welcome to the new Hettich Exclusive (HeX) store in Solapur, where every walkthrough brings design ideas to life. Experience integrated solution-shopping through curated walk-throughs of contemporary furniture.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#5b8dee',thumb:'',url:'https://www.linkedin.com/posts/hettich-india_hettich-hettichindia-hex-activity-7459567840153690114-wIEv'},
+  {brand:'Hettich',platform:'linkedin',handle:'@hettich-india',name:'Hettich India',date:'08 May 2026',text:'For years, she woke up for our every little need. And somewhere between taking care of everyone else, rest became the last thing she asked for herself. It\'s time we gave her more care in return. Happy Mother\'s Day.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#5b8dee',thumb:'',url:'https://www.linkedin.com/posts/hettich-india_hettich-hettichindia-itsallinhettich-activity-7458551293264048128-sTSu'},
+  {brand:'Hettich',platform:'linkedin',handle:'@hettich-india',name:'Hettich India',date:'07 May 2026',text:'We\'re proud to celebrate 1 million subscribers on YouTube — a milestone made possible by every person who has been part of this journey. Thank you for being a part of our story. #HettichIndia',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#5b8dee',thumb:'',url:'https://www.linkedin.com/posts/hettich-india_hettichindia-itsallinhettich-milestone-activity-7458051142225334272-ogJu'},
+  // ── HETTICH FACEBOOK ──
+  {brand:'Hettich',platform:'facebook',handle:'@HettichIndiaPrivateLimited',name:'Hettich India',date:'26 May 2026',text:'With Hettich Magic Lights, furniture comes alive through beautifully focused lighting that highlights textures, objects, and design elements, making your space feel warmer, more inviting, and magical.',likes:4457,comments:9,shares:0,views:0,engagement:4466,engRate:'1.3%',reach:'334.9K',impressions:'502.4K',sentiment:'positive',color:'#5b9ded',thumb:'',url:'https://www.facebook.com/reel/1485179829770209/'},
+  {brand:'Hettich',platform:'facebook',handle:'@HettichIndiaPrivateLimited',name:'Hettich India',date:'25 May 2026',text:'From the gentle glide of the doors to the soft, controlled closing, Hettich SlideLine16 Plus transforms everyday storage into a quieter, more refined experience.',likes:3831,comments:17,shares:0,views:0,engagement:3848,engRate:'1.3%',reach:'288.5K',impressions:'432.8K',sentiment:'positive',color:'#5b9ded',thumb:'',url:'https://www.facebook.com/reel/893457303250707/'},
+  {brand:'Hettich',platform:'facebook',handle:'@HettichIndiaPrivateLimited',name:'Hettich India',date:'24 May 2026',text:'Designed around the philosophy of elegance in minimalism, AvoriTech combines a refined 8mm profile, concealed engineering and smooth, silent performance to deliver a modern, luxurious furniture experience.',likes:3041,comments:50,shares:0,views:0,engagement:3091,engRate:'1.3%',reach:'231.6K',impressions:'347.4K',sentiment:'positive',color:'#5b9ded',thumb:'',url:'https://www.facebook.com/HettichIndiaPrivateLimited/posts/pfbid02r1RPPVKSyhVT3cWQdQz5F62RdPGSRgPczrXgNb4ZVku1dFGbuzL7KhAWEsGqHMwil'},
+  // ── HETTICH YOUTUBE ──
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'26 May 2026',text:'With Hettich Magic Spotlights, furniture comes alive through beautifully focused lighting that highlights textures, objects, and design elements, making your space feel warmer and magical.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/jqsHkNWLsn0/hqdefault.jpg',url:'https://www.youtube.com/watch?v=jqsHkNWLsn0'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'25 May 2026',text:'From the gentle glide of the doors to the soft, controlled closing, Hettich SlideLine16 Plus transforms everyday storage into a quieter, more refined experience.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/vhKglP1uzZQ/hqdefault.jpg',url:'https://www.youtube.com/watch?v=vhKglP1uzZQ'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'19 May 2026',text:'25 years ago, we began our India journey. Today, we stand as a name that helped shape the future of furniture fittings in the country. And 25 years later, we\'re still building what\'s next.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/hh4RiV4WvoQ/hqdefault.jpg',url:'https://www.youtube.com/watch?v=hh4RiV4WvoQ'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'11 May 2026',text:'Welcome to the new Hettich Exclusive (HeX) store in Solapur. Experience integrated solution-shopping through curated walk-throughs of contemporary furniture fitted with Hettich solutions.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/vrr3CqgsIwI/hqdefault.jpg',url:'https://www.youtube.com/watch?v=vrr3CqgsIwI'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'08 May 2026',text:'For years, she woke up for our every little need. It\'s time we gave her a little more silence, a little more rest, and a little more care in return. Happy Mother\'s Day.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/Ob7p4oXMT5Q/hqdefault.jpg',url:'https://www.youtube.com/watch?v=Ob7p4oXMT5Q'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'07 May 2026',text:'Ludhiana, discover what great design really feels like. The Hettich Exclusive store is now open, bringing together thoughtful design, seamless functionality.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/QQzV5Ccuj2U/hqdefault.jpg',url:'https://www.youtube.com/watch?v=QQzV5Ccuj2U'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'06 May 2026',text:'Now open in Jaipur, the Hettich Exclusive Store invites you to experience a new dimension of living, where design is intuitive, and every detail is crafted with intent.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/NKMyCjoJoYc/hqdefault.jpg',url:'https://www.youtube.com/watch?v=NKMyCjoJoYc'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'05 May 2026',text:'A milestone worth celebrating, and people worth celebrating with. Our 25-year celebration at the Bangalore Experience Centre was all about coming together and enjoying the journey.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/LblbvVE1rH4/hqdefault.jpg',url:'https://www.youtube.com/watch?v=LblbvVE1rH4'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'04 May 2026',text:'25 years in India, and every moment worth celebrating. Today, we came together with our customers and partners to celebrate a journey marked by growth, innovation, and transformation.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/tI9rPddsEkI/hqdefault.jpg',url:'https://www.youtube.com/watch?v=tI9rPddsEkI'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'03 May 2026',text:'Strengthening India\'s role in global manufacturing. Hettich proudly unveils its new manufacturing plant in Indore. Spanning over 26,000 sq. metres within Hettich\'s expansive 100,000 plus sq. metre Indore campus.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/RvQ3GRXmar8/hqdefault.jpg',url:'https://www.youtube.com/watch?v=RvQ3GRXmar8'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'02 May 2026',text:'25 years of engineering excellence in India. A new milestone begins. Hettich proudly unveils its new manufacturing plant in Indore, strengthening the Made in India, Made for the World vision.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/fW1BQ90D7k8/hqdefault.jpg',url:'https://www.youtube.com/watch?v=fW1BQ90D7k8'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'08 Mar 2026',text:'Within every woman is a whole world of magic waiting to unfold. When she finally gets the space she truly deserves, everything she carries within her finds room to breathe, to bloom, and to become. Happy Women\'s Day.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/ErSpR2zyAvs/hqdefault.jpg',url:'https://www.youtube.com/watch?v=ErSpR2zyAvs'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'15 Apr 2026',text:'At the IIID Nagpur Chapter Showcase, our booth came alive as the design fraternity explored magical interior solutions that glide effortlessly, transform spaces with a spin, and illuminate interiors like magic.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#f16060',thumb:'https://i.ytimg.com/vi/ey95QlwRd2Q/hqdefault.jpg',url:'https://www.youtube.com/watch?v=ey95QlwRd2Q'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'01 Mar 2026',text:'At IndiaWood, visitors and the design fraternity experienced spaces that spin, expand and light up like magic. Every interaction showed how intelligent design can transform spaces.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#f16060',thumb:'https://i.ytimg.com/vi/9IlJC9XlS3A/hqdefault.jpg',url:'https://www.youtube.com/watch?v=9IlJC9XlS3A'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'28 Feb 2026',text:'Sliding that feels like magic. At IndiaWood 2026, hear about Grant 400 Neo, a floor-to-ceiling sliding system engineered for effortless movement, silent performance, refined precision and infinite design possibilities.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#f16060',thumb:'https://i.ytimg.com/vi/QB3alBopFg8/hqdefault.jpg',url:'https://www.youtube.com/watch?v=QB3alBopFg8'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'27 Feb 2026',text:'Workspaces don\'t have to stay still. At IndiaWood 2026, discover RoomSpin Office — a fresh way to experience how movement can reshape the way we work and collaborate.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#f16060',thumb:'https://i.ytimg.com/vi/B-qGWY7KK5g/hqdefault.jpg',url:'https://www.youtube.com/watch?v=B-qGWY7KK5g'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'26 Feb 2026',text:'Experience Linear Drawer Systems that support more, move better and think ahead. As Hettich celebrates 25 years in India, we continue to elevate everyday living through innovative storage.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#f16060',thumb:'https://i.ytimg.com/vi/lWFHRBQqh-E/hqdefault.jpg',url:'https://www.youtube.com/watch?v=lWFHRBQqh-E'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'25 Feb 2026',text:'The future of furniture isn\'t just designed. It adapts. As Hettich celebrates 25 years in India, we continue to shape interiors through intelligent engineering and Magical Motion.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#f16060',thumb:'https://i.ytimg.com/vi/hR1ZtNZEzfI/hqdefault.jpg',url:'https://www.youtube.com/watch?v=hR1ZtNZEzfI'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'24 Feb 2026',text:'Magical Motion is where engineering leadership turns into experience. As Hettich marks 25 years in India under the milestone theme Built to Lead, we continue to shape the future of interiors.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/ebKi_Qzu008/hqdefault.jpg',url:'https://www.youtube.com/watch?v=ebKi_Qzu008'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'20 Apr 2026',text:'Kolkata levels up its design story. A magical space opens, built for those who believe great interiors are defined not just by how they look, but by how they move, adapt, and perform.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/PXJfH9ueBYA/hqdefault.jpg',url:'https://www.youtube.com/watch?v=PXJfH9ueBYA'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'22 Feb 2026',text:'Every space has potential. Every design begins with an idea. We\'re bringing a bigger, more immersive experience, designed to surprise, invite interaction, and spin your expectations.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#f16060',thumb:'https://i.ytimg.com/vi/w3GogU0UZVY/hqdefault.jpg',url:'https://www.youtube.com/watch?v=w3GogU0UZVY'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'14 Feb 2026',text:'The magic of being in love is knowing it stays quietly, gently, beautifully. In the little moments, in the way happiness moves you, in everything that feels magical together. Happy Valentine\'s Day.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/VyCi9pA1cRM/hqdefault.jpg',url:'https://www.youtube.com/watch?v=VyCi9pA1cRM'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'10 Apr 2026',text:'Born from a legacy built over 100+ years, we came to India 25 years ago with a clear intent: to help shape the furniture fitting industry to deliver unparalleled value proposition to its consumers.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/5A5-m4irHHg/hqdefault.jpg',url:'https://www.youtube.com/watch?v=5A5-m4irHHg'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'18 Mar 2026',text:'Hettich recently hosted its International Dealer Meet in Dubai, bringing together Hi Flyer Club members for a magical five-day experience that went beyond business.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/17wpRIzsrLM/hqdefault.jpg',url:'https://www.youtube.com/watch?v=17wpRIzsrLM'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'30 Apr 2026',text:'Designing a kitchen today goes far beyond cabinets and countertops. It\'s about designing how we live. In the season finale of Living With Magic, explore innovations for the future.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#f16060',thumb:'https://i.ytimg.com/vi/ZaZKkZGRXtw/hqdefault.jpg',url:'https://www.youtube.com/watch?v=ZaZKkZGRXtw'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'29 Apr 2026',text:'Kitchen design today isn\'t just about how it looks. It\'s about how it works for the way we live. Discover the season finale of Living With Magic with Co-Founder insights.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#f16060',thumb:'https://i.ytimg.com/vi/mJy_ioHkZt8/hqdefault.jpg',url:'https://www.youtube.com/watch?v=mJy_ioHkZt8'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'05 Apr 2026',text:'As Hettich marks 25 years in India, we welcomed our esteemed partners to the Indore Experience Centre for an engaging meet-and-greet filled with meaningful conversations.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/zBLktiJrEm0/hqdefault.jpg',url:'https://www.youtube.com/watch?v=zBLktiJrEm0'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'12 Mar 2026',text:'Progress accelerates when people come together with trust, openness, and a shared sense of purpose. The third edition of Basecamp, our sales conference, came alive in Indore.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/VPfDlnpAPqA/hqdefault.jpg',url:'https://www.youtube.com/watch?v=VPfDlnpAPqA'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'11 Mar 2026',text:'As part of our Annual Basecamp, Hettich colleagues from across India and over 65 countries came together for a magical experience. The visit to Indore Manufacturing Plant was a highlight.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#f16060',thumb:'https://i.ytimg.com/vi/33qryo8bB1o/hqdefault.jpg',url:'https://www.youtube.com/watch?v=33qryo8bB1o'},
+  {brand:'Hettich',platform:'youtube',handle:'@Hettichindia',name:'Hettich India',date:'01 Apr 2026',text:'Hettich India is proud to contribute to Viksit Bharat by combining world-class manufacturing with local expertise. Our facilities in Vadodara and Indore serve global markets.',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#f16060',thumb:'https://i.ytimg.com/vi/NsNvoAlIbuw/hqdefault.jpg',url:'https://www.youtube.com/watch?v=NsNvoAlIbuw'},
+  // ── HETTICH TWITTER ──
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'27 May 2026',text:'Great kitchens are not just about how they look. They are defined by how they perform. #Hettich #HettichIndia #ItsAllInHettich',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2059251892711260387'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'26 May 2026',text:'With Hettich Magic Lights, furniture comes alive through beautifully focused lighting. #MagicLights #HettichIndia',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2058924475190812772'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'25 May 2026',text:'SlideLine16 Plus — built to handle heavier shutters while maintaining effortless movement. #Hettich #SlidingSystem',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2058510823954301141'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'24 May 2026',text:'AvoriTech — elegance in minimalism. #Hettich #DrawerSystems #HettichIndia',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2058148437754061268'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'23 May 2026',text:'Enter dark mode with the Onsys Magma Black Hinge. #HettichIndia #ItsAllInHettich',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'positive',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2057787306074128457'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'22 May 2026',text:'Your dream space is all about the details. Book your free design consultation today. #Hettich',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2057434886299119842'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'19 May 2026',text:'25 years ago, we began our India journey. Built to Lead. #HettichIndia #ItsAllInHettich #MakeInIndia',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2056702543980540403'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'16 May 2026',text:'Happy International Day of Lights! Every shelf holds a story. The right light brings it all to life. #MagicLights',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2055838212707504456'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'15 May 2026',text:'Happy International Day of Families! Together, yet not always present. Until the noise fades and it feels like family again. #Hettich',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2055475825521385824'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'11 May 2026',text:'New HeX Store opens in Solapur! Experience integrated solution-shopping. Visit Mother Modular Kitchens, Solapur. #HeX #HettichIndia',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2055185306702541217'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'10 May 2026',text:'Happy Mother\'s Day. She woke up for every little need. It\'s time we gave her more care in return. #HappyMothersDay',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2053800079124046196'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'07 May 2026',text:'1 Million YouTube subscribers! Thank you for being part of our story. #HettichIndia #Milestone',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2052787702790279531'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'06 May 2026',text:'Ebco Coat Hanger — smooth hydraulic movement. Top-wardrobe access made simple. #EBCO #Storage',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'negative',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2052293774244806864'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'04 May 2026',text:'Maximise storage in narrow cabinets — Zinc White finish. Fits spaces 20-40 cm wide. #EBCO #Storage',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'negative',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2052214335645073851'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'03 May 2026',text:'Celebrate Eid with organised spaces. Smart storage brings efficiency and joy. Eid Mubarak! #Hettich',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'negative',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2051971838583116276'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'19 Mar 2026',text:'Gudi Padwa greetings! EBCO\'s smart kitchen storage makes every celebration effortless. #GudiPadwa',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'negative',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2051657280270344650'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'10 Mar 2026',text:'These 5 wardrobe additions are total game changers. From smart mirrors to space-saving pullouts. #Wardrobe',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'negative',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2050083996844106203'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'14 Feb 2026',text:'Happy Valentine\'s Day from Hettich! The magic of being in love — in the little moments that feel magical together. #ValentinesDay',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2049446404242981141'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'01 Mar 2026',text:'At IndiaWood 2026, our booth showcased magical interior solutions. Thank you to everyone who visited! #IndiaWood2026 #Hettich',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2049134019091271766'},
+  {brand:'Hettich',platform:'twitter',handle:'@HettichIndia',name:'Hettich India',date:'08 Mar 2026',text:'Happy Women\'s Day! Within every woman is a whole world of magic waiting to unfold. #WomensDay #Hettich',likes:0,comments:0,shares:0,views:0,engagement:0,engRate:'0%',reach:'0',impressions:'0',sentiment:'neutral',color:'#5acce6',thumb:'',url:'https://x.com/HettichIndia/status/2049134019091271765'},
+];
+
+// ══════════════════════════════════════════════════════
+// CHART INSTANCES
+// ══════════════════════════════════════════════════════
+let charts = {};
+let currentBrand = 'all';
+let currentSentiment = 'positive';
+let detailCatChart = null, sourceChart = null;
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', ()=>{
+  renderAll();
+});
+
+function updateBrand(){
+  currentBrand = document.getElementById('brand-select').value;
+  renderAll();
+}
+
+function renderAll(){
+  renderVoiceCards();
+  renderSOV();
+  renderTrend();
+  renderSentBreakdown();
+  renderIntentBreakdown();
+  renderContextualIntent();
+  renderNetworkCVA();
+  renderTreemap();
+  renderBubble();
+  renderNetworkOpinions();
+  renderWordClouds();
+  renderSentCircles();
+  renderLocationChart();
+}
+
+// ══════════════════════════════════════════════════════
+// VOICE CARDS
+// ══════════════════════════════════════════════════════
+function renderVoiceCards(){
+  const d = BRAND_DATA[currentBrand] || BRAND_DATA.all;
+  document.getElementById('vc-total').textContent = d.total;
+  document.getElementById('vc-pos').childNodes[0].textContent = d.pos + ' ';
+  document.getElementById('vc-pos-pct').textContent = d.posPct + ' %';
+  document.getElementById('vc-neg').childNodes[0].textContent = d.neg + ' ';
+  document.getElementById('vc-neg-pct').textContent = d.negPct + ' %';
+  document.getElementById('vc-neu').childNodes[0].textContent = d.neu + ' ';
+  document.getElementById('vc-neu-pct').textContent = d.neuPct + ' %';
+  document.getElementById('vc-unique').textContent = d.unique;
+}
+
+// ══════════════════════════════════════════════════════
+// SOV DONUT
+// ══════════════════════════════════════════════════════
+function renderSOV(){
+  const data = PLATFORM_SOV_DATA[currentBrand] || PLATFORM_SOV_DATA.all;
+  const legend = document.getElementById('sov-legend');
+  legend.innerHTML = data.map(d=>`
+    <div class="sov-item">
+      <span class="sov-dot" style="background:${d.color}"></span>
+      <span class="sov-name">${d.name}</span>
+      <span class="sov-val">${d.count} | ${d.pct}%</span>
+    </div>
+  `).join('');
+  if(charts.sov) charts.sov.destroy();
+  charts.sov = new Chart(document.getElementById('chart-sov'),{
+    type:'doughnut',
+    data:{
+      labels: data.map(d=>d.name),
+      datasets:[{data:data.map(d=>d.count),backgroundColor:data.map(d=>d.color),borderWidth:2,borderColor:'#fff',hoverOffset:4}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+ctx.parsed+' ('+data[ctx.dataIndex].pct+'%)'}}}
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// TREND LINE CHART
+// ══════════════════════════════════════════════════════
+function renderTrend(){
+  const tdata = TREND_DATA[currentBrand] || TREND_DATA.all;
+  const colors = {Instagram:'#eb7ea8',LinkedIn:'#5b8dee',Facebook:'#5b9ded',YouTube:'#f16060',Twitter:'#5acce6'};
+  const datasets = Object.entries(tdata).map(([plt,vals])=>({
+    label:plt, data:vals,
+    borderColor:colors[plt], backgroundColor:colors[plt]+'22',
+    borderWidth:2, pointRadius:4, pointBackgroundColor:colors[plt],
+    tension:.4, fill:false,
+  }));
+  if(charts.trend) charts.trend.destroy();
+  charts.trend = new Chart(document.getElementById('chart-trend'),{
+    type:'line',
+    data:{labels:MONTHS, datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10},padding:8,color:'#666'}}},
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#888',font:{size:10},maxRotation:45}},
+        y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#888',font:{size:10}},title:{display:true,text:'Mention Count',font:{size:10},color:'#888'}}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// INTENT BREAKDOWN DATA
+// ══════════════════════════════════════════════════════
+const INTENT_DATA = {
+  all:[
+    {name:'Appreciation',  icon:'👍', color:'#52c41a', total:128, pos:112, neg:10, neu:6},
+    {name:'Product Inquiry',icon:'🔍',color:'#4b52d4', total:76,  pos:38,  neg:20, neu:18},
+    {name:'General Discussion',icon:'💬',color:'#1890ff',total:89,pos:44,neg:25,neu:20},
+    {name:'Complaint',     icon:'⚠️', color:'#ff4d4f', total:67,  pos:8,   neg:52, neu:7},
+    {name:'Feedback',      icon:'📝', color:'#faad14', total:54,  pos:28,  neg:16, neu:10},
+    {name:'Suggestion',    icon:'💡', color:'#722ed1', total:38,  pos:20,  neg:12, neu:6},
+    {name:'Brand Promo',   icon:'📣', color:'#13c2c2', total:21,  pos:18,  neg:1,  neu:2},
+    {name:'Support Request',icon:'🛠',color:'#eb2f96', total:7,   pos:0,   neg:6,  neu:1},
+  ],
+  Ebco:[
+    {name:'Appreciation',  icon:'👍', color:'#52c41a', total:28, pos:22, neg:3, neu:3},
+    {name:'Product Inquiry',icon:'🔍',color:'#4b52d4', total:18, pos:12, neg:4, neu:2},
+    {name:'General Discussion',icon:'💬',color:'#1890ff',total:22,pos:14,neg:5,neu:3},
+    {name:'Complaint',     icon:'⚠️', color:'#ff4d4f', total:12, pos:2,  neg:9, neu:1},
+    {name:'Feedback',      icon:'📝', color:'#faad14', total:12, pos:6,  neg:4, neu:2},
+    {name:'Suggestion',    icon:'💡', color:'#722ed1', total:8,  pos:5,  neg:2, neu:1},
+    {name:'Brand Promo',   icon:'📣', color:'#13c2c2', total:3,  pos:1,  neg:1, neu:1},
+    {name:'Support Request',icon:'🛠',color:'#eb2f96', total:0,  pos:0,  neg:0, neu:0},
+  ],
+  Hettich:[
+    {name:'Appreciation',  icon:'👍', color:'#52c41a', total:52, pos:44, neg:5,  neu:3},
+    {name:'Product Inquiry',icon:'🔍',color:'#4b52d4', total:30, pos:14, neg:9,  neu:7},
+    {name:'General Discussion',icon:'💬',color:'#1890ff',total:38,pos:18,neg:12,neu:8},
+    {name:'Complaint',     icon:'⚠️', color:'#ff4d4f', total:28, pos:3,  neg:21, neu:4},
+    {name:'Feedback',      icon:'📝', color:'#faad14', total:22, pos:12, neg:6,  neu:4},
+    {name:'Suggestion',    icon:'💡', color:'#722ed1', total:16, pos:8,  neg:6,  neu:2},
+    {name:'Brand Promo',   icon:'📣', color:'#13c2c2', total:10, pos:8,  neg:1,  neu:1},
+    {name:'Support Request',icon:'🛠',color:'#eb2f96', total:4,  pos:0,  neg:3,  neu:1},
+  ],
+  Hafele:[
+    {name:'Appreciation',  icon:'👍', color:'#52c41a', total:48, pos:46, neg:2,  neu:0},
+    {name:'Product Inquiry',icon:'🔍',color:'#4b52d4', total:28, pos:12, neg:7,  neu:9},
+    {name:'General Discussion',icon:'💬',color:'#1890ff',total:29,pos:12,neg:8, neu:9},
+    {name:'Complaint',     icon:'⚠️', color:'#ff4d4f', total:27, pos:3,  neg:22, neu:2},
+    {name:'Feedback',      icon:'📝', color:'#faad14', total:20, pos:10, neg:6,  neu:4},
+    {name:'Suggestion',    icon:'💡', color:'#722ed1', total:14, pos:7,  neg:4,  neu:3},
+    {name:'Brand Promo',   icon:'📣', color:'#13c2c2', total:8,  pos:9,  neg:-1, neu:0},
+    {name:'Support Request',icon:'🛠',color:'#eb2f96', total:3,  pos:0,  neg:3,  neu:0},
+  ],
+};
+
+function renderIntentBreakdown(){
+  const data = (INTENT_DATA[currentBrand] || INTENT_DATA.all).filter(d=>d.total>0);
+  const labels = data.map(d=>d.name);
+  if(charts.intentBreak) charts.intentBreak.destroy();
+  charts.intentBreak = new Chart(document.getElementById('chart-intent-breakdown'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Total',    data:data.map(d=>d.total), backgroundColor:'#4b52d4cc', borderRadius:3},
+        {label:'Positive', data:data.map(d=>d.pos),   backgroundColor:'#52c41acc', borderRadius:3},
+        {label:'Negative', data:data.map(d=>d.neg),   backgroundColor:'#ff4d4fcc', borderRadius:3},
+      ]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>' '+ctx.dataset.label+': '+ctx.parsed.x}}
+      },
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#888',font:{size:10}},title:{display:true,text:'Mention Count',font:{size:10},color:'#888'}},
+        y:{grid:{display:false},ticks:{color:'#555',font:{size:11}}}
+      }
+    }
+  });
+}
+
+function toggleIntentDataset(btn){
+  const idx = parseInt(btn.dataset.idx);
+  const chart = charts.intentBreak;
+  if(!chart) return;
+  const meta = chart.getDatasetMeta(idx);
+  const isHidden = meta.hidden;
+  // if currently hidden, show it; if visible, hide it
+  // but always keep at least one visible
+  const visibleCount = [0,1,2].filter(i=>!chart.getDatasetMeta(i).hidden).length;
+  if(!isHidden && visibleCount === 1) return; // don't hide the last one
+  meta.hidden = !isHidden;
+  btn.classList.toggle('active', isHidden);
+  chart.update();
+}
+
+function renderContextualIntent(){
+  const data = (INTENT_DATA[currentBrand] || INTENT_DATA.all).filter(d=>d.total>0);
+  const el = document.getElementById('contextual-intent');
+  el.innerHTML = data.map(d=>{
+    const posPct = d.total ? Math.round(d.pos/d.total*100) : 0;
+    const negPct = d.total ? Math.round(d.neg/d.total*100) : 0;
+    const neuPct = 100 - posPct - negPct;
+    return `<div class="intent-card">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="ic-icon" style="background:${d.color}22">${d.icon}</div>
+        <div class="ic-name">${d.name}</div>
+      </div>
+      <div class="ic-total">${d.total}</div>
+      <div class="ic-pcts">
+        <span style="color:#52c41a">+${d.pos}</span>
+        <span style="color:#ff4d4f">−${d.neg}</span>
+        <span style="color:#faad14">~${d.neu}</span>
+      </div>
+      <div class="ic-bar">
+        <div class="ic-bar-pos" style="width:${posPct}%"></div>
+        <div class="ic-bar-neg" style="width:${negPct}%"></div>
+        <div class="ic-bar-neu" style="width:${neuPct}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// SENTIMENT BREAKDOWN (stacked bar by platform)
+// ══════════════════════════════════════════════════════
+function renderSentBreakdown(){
+  const src = SENT_BREAKDOWN[currentBrand] || SENT_BREAKDOWN.all;
+  const plts = ['Instagram','LinkedIn','Facebook','YouTube','Twitter'];
+  const posData = plts.map(p=>src[p]?.pos||0);
+  const negData = plts.map(p=>src[p]?.neg||0);
+  const neuData = plts.map(p=>src[p]?.neu||0);
+  if(charts.sentBreak) charts.sentBreak.destroy();
+  charts.sentBreak = new Chart(document.getElementById('chart-sent-breakdown'),{
+    type:'bar',
+    data:{
+      labels:plts,
+      datasets:[
+        {label:'Positive',data:posData,backgroundColor:'#52c41a',stack:'s'},
+        {label:'Negative',data:negData,backgroundColor:'#ff4d4f',stack:'s'},
+        {label:'Neutral', data:neuData,backgroundColor:'#faad14',stack:'s'},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#666',font:{size:11}},title:{display:true,text:'Upper Category',font:{size:10},color:'#888'}},
+        y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#888',font:{size:10}},title:{display:true,text:'Mention Count',font:{size:10},color:'#888'}}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// NETWORK CVA (Key Context bubbles)
+// ══════════════════════════════════════════════════════
+const CVA_NODES = [
+  {label:'Information',  pos:60, neg:30, neu:10, x:38, y:28, size:100, c:'#5b8dee'},
+  {label:'Complaint',    pos:15, neg:70, neu:15, x:62, y:55, size:90,  c:'#f16060'},
+  {label:'Appreciation', pos:80, neg:10, neu:10, x:25, y:62, size:84,  c:'#52c41a'},
+  {label:'Query',        pos:40, neg:35, neu:25, x:52, y:30, size:72,  c:'#faad14'},
+  {label:'Moderation',   pos:50, neg:20, neu:30, x:72, y:30, size:60,  c:'#13c2c2'},
+  {label:'Brand Promo',  pos:90, neg:5,  neu:5,  x:18, y:35, size:52,  c:'#722ed1'},
+  {label:'Request',      pos:45, neg:40, neu:15, x:80, y:62, size:48,  c:'#eb2f96'},
+  {label:'Feedback',     pos:55, neg:30, neu:15, x:40, y:72, size:44,  c:'#fa8c16'},
+  {label:'Opportunity',  pos:75, neg:15, neu:10, x:14, y:55, size:40,  c:'#1890ff'},
+];
+
+function renderNetworkCVA(){
+  const el = document.getElementById('network-cva');
+  el.innerHTML = CVA_NODES.map(n=>`
+    <div class="node" style="left:${n.x}%;top:${n.y}%;width:${n.size}px;height:${n.size}px;background:${n.c}cc;transform:translate(-50%,-50%);border:3px solid ${n.c}">
+      <div class="node-label" style="font-size:${n.size>70?11:9}px">${n.label}<br><span style="font-size:9px;opacity:.8">${Math.round(n.pos+n.neg+n.neu)}</span></div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// TREEMAP
+// ══════════════════════════════════════════════════════
+function renderTreemap(){
+  const el = document.getElementById('treemap');
+  const total = KEYWORDS.reduce((s,k)=>s+k.count,0);
+  el.innerHTML = KEYWORDS.map(k=>{
+    const flex = (k.count/total*100).toFixed(1);
+    const shade = Math.round(80 + (k.count/139)*120);
+    return `<div class="tm-cell" style="flex:${flex};min-width:${k.count>30?120:60}px;height:${k.count>100?100:k.count>50?80:k.count>20?65:50}px;background:${k.color};opacity:${0.55+k.count/280}" title="${k.name}: ${k.count} mentions">
+      <div class="tm-name">${k.name}</div>
+      <div class="tm-pct">${k.count} | ${k.pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// BUBBLE SCATTER (Key Context vs Sentiment)
+// ══════════════════════════════════════════════════════
+const BUBBLE_COLORS=['#4b52d4','#eb7ea8','#52c41a','#faad14','#f16060','#5acce6','#722ed1','#fa8c16','#eb2f96','#13c2c2','#1890ff','#52c41a','#a0522d'];
+function renderBubble(){
+  const datasets = KEYWORDS.map((k,i)=>({
+    label:k.name,
+    data:[{x:k.nss, y:k.count, r:Math.max(6,Math.sqrt(k.count)*1.4)}],
+    backgroundColor:BUBBLE_COLORS[i%BUBBLE_COLORS.length]+'bb',
+    borderColor:BUBBLE_COLORS[i%BUBBLE_COLORS.length],
+    borderWidth:1,
+  }));
+  const legend = document.getElementById('bubble-legend');
+  legend.innerHTML = KEYWORDS.map((k,i)=>`<span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:${BUBBLE_COLORS[i%13]};display:inline-block"></span>${k.name}</span>`).join('');
+  if(charts.bubble) charts.bubble.destroy();
+  charts.bubble = new Chart(document.getElementById('chart-bubble'),{
+    type:'bubble',
+    data:{datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: NSS ${ctx.parsed.x.toFixed(1)}, Mentions ${ctx.parsed.y}`}}},
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#888',font:{size:10}},title:{display:true,text:'NSS Score',font:{size:10},color:'#888'},min:-12,max:12},
+        y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#888',font:{size:10}},title:{display:true,text:'Mention Count',font:{size:10},color:'#888'}}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// NETWORK OPINIONS
+// ══════════════════════════════════════════════════════
+const OPIN_NODES = [
+  {label:'Storage',x:50,y:40,size:80,pos:72,neg:18,c:'#4b52d4'},
+  {label:'Design',x:28,y:28,size:68,pos:60,neg:25,c:'#7b3ec8'},
+  {label:'Smart Living',x:70,y:28,size:64,pos:68,neg:20,c:'#2e9e5b'},
+  {label:'Wardrobe',x:20,y:55,size:56,pos:55,neg:30,c:'#d4880a'},
+  {label:'Kitchen',x:76,y:58,size:52,pos:50,neg:35,c:'#c43a5b'},
+  {label:'Innovation',x:42,y:68,size:44,pos:80,neg:12,c:'#0a6ebf'},
+  {label:'Security',x:62,y:68,size:40,pos:30,neg:55,c:'#e74c3c'},
+];
+function renderNetworkOpinions(){
+  const el = document.getElementById('network-opinions');
+  el.innerHTML = OPIN_NODES.map(n=>`
+    <div class="node" style="left:${n.x}%;top:${n.y}%;width:${n.size}px;height:${n.size}px;background:${n.c}bb;transform:translate(-50%,-50%);border:3px solid ${n.c}">
+      <div class="node-label" style="font-size:${n.size>60?11:9}px">${n.label}</div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// WORD CLOUDS
+// ══════════════════════════════════════════════════════
+function buildWC(data, containerId){
+  const max = Math.max(...data.map(d=>d.s));
+  document.getElementById(containerId).innerHTML = data.map(d=>`
+    <span class="wc-word" style="font-size:${10+(d.s/max)*28}px;color:${d.c}">${d.t}</span>
+  `).join('');
+}
+function renderWordClouds(){
+  buildWC(WC_BRANDS,'wc-brands');
+  buildWC(WC_HANDLES,'wc-handles');
+  buildWC(WC_PRODUCTS,'wc-products');
+}
+
+// ══════════════════════════════════════════════════════
+// SENTIMENT CIRCLES
+// ══════════════════════════════════════════════════════
+function renderSentCircles(){
+  document.getElementById('sent-circles').innerHTML = PRODUCTS_SENT.map(p=>`
+    <div class="sc-wrap">
+      <div class="sc-circle" style="width:${p.size}px;height:${p.size}px;background:${p.pos>=50?'#52c41a':'#ff4d4f'}">${p.pos}%</div>
+      <div class="sc-name">${p.name}</div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// LOCATION CHART
+// ══════════════════════════════════════════════════════
+function renderLocationChart(){
+  if(charts.loc) charts.loc.destroy();
+  charts.loc = new Chart(document.getElementById('chart-location'),{
+    type:'bar',
+    data:{
+      labels:LOCATIONS.map(l=>l.name),
+      datasets:[
+        {label:'Positive',data:LOCATIONS.map(l=>l.pos),backgroundColor:'#52c41a',stack:'s'},
+        {label:'Negative',data:LOCATIONS.map(l=>l.neg),backgroundColor:'#ff4d4f',stack:'s'},
+        {label:'Neutral', data:LOCATIONS.map(l=>l.neu),backgroundColor:'#faad14',stack:'s'},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10},padding:8}}},
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#666',font:{size:10}}},
+        y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#888',font:{size:10}},title:{display:true,text:'Mention Count',font:{size:10},color:'#888'}}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// DETAIL VIEW
+// ══════════════════════════════════════════════════════
+function openDetail(sentiment){
+  currentSentiment = sentiment;
+  const d = BRAND_DATA[currentBrand]||BRAND_DATA.all;
+  const label = sentiment==='positive'?'Positive':sentiment==='negative'?'Negative':'Neutral';
+  const count = sentiment==='positive'?d.pos:sentiment==='negative'?d.neg:d.neu;
+
+  document.getElementById('detail-crumb').innerHTML =
+    `<b>X-Attribute:</b> Sentiment (${label}) &nbsp;<b>Y-Series:</b> Mention Count (${count})`;
+
+  // Stats bar
+  document.getElementById('detail-stats-bar').innerHTML = `
+    <div class="ds-item"><div class="ds-label">Total Mentions</div><div class="ds-val">${count}</div></div>
+    <div class="ds-item"><div class="ds-label">Positive</div><div class="ds-val">${sentiment==='positive'?count:0}</div><div class="ds-sub">${sentiment==='positive'?'100%':'0%'}</div></div>
+    <div class="ds-item"><div class="ds-label">Negative</div><div class="ds-val">${sentiment==='negative'?count:0}</div><div class="ds-sub neg">${sentiment==='negative'?'100%':'0%'}</div></div>
+    <div class="ds-item"><div class="ds-label">Neutral</div><div class="ds-val">${sentiment==='neutral'?count:0}</div><div class="ds-sub neu">${sentiment==='neutral'?'100%':'0%'}</div></div>
+    <div class="ds-item"><div class="ds-label">Unique Users</div><div class="ds-val">${Math.round(count*0.73)}</div></div>
+    <div class="ds-item"><div class="ds-label">Verified Users</div><div class="ds-val">${Math.round(count*0.28)}</div></div>
+  `;
+
+  // Filter posts
+  const posts = ALL_POSTS.filter(p=>p.sentiment===sentiment);
+  document.getElementById('social-count').textContent = posts.length;
+  document.getElementById('showing-count').textContent = `Showing 1 - ${Math.min(posts.length,12)} mentions`;
+
+  document.getElementById('posts-grid').innerHTML = posts.map(p=>postCard(p)).join('');
+
+  // Word cloud for detail
+  const words = p2words(posts);
+  document.getElementById('detail-wc').innerHTML = words.map(w=>`
+    <span class="wc-word" style="font-size:${10+w.s*22}px;color:${BUBBLE_COLORS[w.i%13]}">${w.t}</span>
+  `).join('');
+
+  // Category chart
+  setTimeout(()=>{
+    if(detailCatChart) detailCatChart.destroy();
+    detailCatChart = new Chart(document.getElementById('chart-detail-cat'),{
+      type:'bar',
+      data:{
+        labels:['Instagram','LinkedIn','Facebook','YouTube','Twitter'],
+        datasets:[{data:[Math.round(count*.35),Math.round(count*.28),Math.round(count*.20),Math.round(count*.12),Math.round(count*.05)],backgroundColor:['#eb7ea8','#5b8dee','#5b9ded','#f16060','#5acce6'],borderRadius:4}]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'}}}}
+    });
+    if(sourceChart) sourceChart.destroy();
+    sourceChart = new Chart(document.getElementById('chart-source'),{
+      type:'pie',
+      data:{
+        labels:['Instagram','LinkedIn','Facebook','YouTube','Twitter'],
+        datasets:[{data:[35,28,20,12,5],backgroundColor:['#eb7ea8','#5b8dee','#5b9ded','#f16060','#5acce6'],borderWidth:2,borderColor:'#fff'}]
+      },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10}}}}
+    });
+  },50);
+
+  // Influencers
+  const inf = posts.slice(0,6).map(p=>({name:p.name,handle:p.handle,platform:p.platform,engagement:p.engagement,color:p.color}));
+  document.getElementById('inf-grid').innerHTML = inf.map(i=>`
+    <div class="inf-card">
+      <div class="inf-avatar" style="background:${i.color}">${i.name.charAt(0)}</div>
+      <div>
+        <div class="inf-name">${i.name}</div>
+        <div class="inf-handle">${i.handle}</div>
+        <div class="inf-metric">Engagement: ${fmtK(i.engagement)}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Source table
+  const srcRows = [['Instagram',Math.round(count*.35),'#eb7ea8'],['LinkedIn',Math.round(count*.28),'#5b8dee'],['Facebook',Math.round(count*.20),'#5b9ded'],['YouTube',Math.round(count*.12),'#f16060'],['Twitter',Math.round(count*.05),'#5acce6']];
+  document.getElementById('source-table').innerHTML = `<table style="width:100%;font-size:12px;border-collapse:collapse">${srcRows.map(r=>`<tr><td style="padding:6px 8px">${r[0]}</td><td style="padding:6px 8px;font-weight:700;color:${r[2]}">${r[1]}</td><td style="padding:6px 8px;width:120px"><div style="height:6px;border-radius:3px;background:${r[2]};width:${r[1]/count*100}%"></div></td></tr>`).join('')}</table>`;
+
+  // Location table
+  const tbody = document.querySelector('#loc-table-detail tbody');
+  tbody.innerHTML = LOCATIONS.map(l=>`
+    <tr>
+      <td>${l.name}</td>
+      <td>${l.pos+l.neg+l.neu}</td>
+      <td style="width:140px">
+        <div class="sent-bar">
+          <div class="sent-bar-fill" style="width:${l.pos/(l.pos+l.neg+l.neu)*100}%;background:#52c41a"></div>
+        </div>
+        <div style="font-size:10px;color:#888;margin-top:2px">${Math.round(l.pos/(l.pos+l.neg+l.neu)*100)}% positive</div>
+      </td>
+    </tr>
+  `).join('');
+
+  // Reset tabs
+  document.querySelectorAll('.detail-tab').forEach((t,i)=>{t.classList.toggle('active',i===0)});
+  document.querySelectorAll('.detail-section').forEach((s,i)=>{s.classList.toggle('active',i===0)});
+
+  document.getElementById('detail-view').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeDetail(){
+  document.getElementById('detail-view').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// Build word cloud from posts
+function p2words(posts){
+  const freq={};
+  posts.forEach(p=>{
+    p.text.toLowerCase().split(/\W+/).filter(w=>w.length>4&&!['their','about','every','which','with','that','have','from','this','been','your','into','will','more','than','also','when'].includes(w)).forEach(w=>{freq[w]=(freq[w]||0)+1;});
+  });
+  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([t,c],i)=>({t,s:c/Math.max(...Object.values(freq)),i}));
+}
+
+function postCard(p){
+  const thumbBg = {instagram:'linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)',linkedin:'linear-gradient(135deg,#0a66c2,#3b82c4)',facebook:'linear-gradient(135deg,#1877f2,#42a5f5)',youtube:'linear-gradient(135deg,#ff0000,#ff6b6b)',twitter:'linear-gradient(135deg,#1da1f2,#5ac8fa)'}[p.platform]||'#eee';
+  const PLT_ICON = {instagram:'📸',linkedin:'💼',facebook:'👥',youtube:'▶',twitter:'🐦'};
+  const hasUrl = p.url && p.url !== '#';
+  return `
+  <div class="post-card" style="cursor:${hasUrl?'pointer':'default'}" onclick="${hasUrl?`window.open('${p.url}','_blank')`:''}">
+    <div class="pc-header">
+      <div class="pc-avatar" style="background:${p.color}">${p.name.charAt(0)}</div>
+      <div class="pc-info">
+        <div class="pc-name">${p.name}</div>
+        <div class="pc-handle">${p.handle} <span style="font-size:10px;color:#aaa">${PLT_ICON[p.platform]||''} ${p.platform}</span></div>
+      </div>
+      <div class="pc-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+        <span>🕐 ${p.date}</span>
+        ${hasUrl?`<span style="font-size:10px;color:#4b52d4;font-weight:600">View Post ↗</span>`:''}
+      </div>
+    </div>
+    <div class="pc-text">${p.text}</div>
+    <div class="pc-readmore">... Read More</div>
+    <div class="pc-thumb" style="background:${thumbBg}${p.thumb?`;background-image:url(${p.thumb});background-size:cover;background-position:center`:''}""></div>
+    <div class="pc-stats">
+      <span class="pc-stat">♥ ${p.likes}</span>
+      <span class="pc-stat">💬 ${p.comments}</span>
+      <span class="pc-stat">↺ ${p.shares}</span>
+      <span class="pc-stat">👁 ${fmtK(p.views||0)}</span>
+    </div>
+    <div class="pc-metrics">
+      <div><div class="pc-metric-val">${fmtK(p.engagement)}</div><div class="pc-metric-label">Engagement</div></div>
+      <div><div class="pc-metric-val">${p.engRate}</div><div class="pc-metric-label">Eng. Rate</div></div>
+      <div><div class="pc-metric-val">${p.reach}</div><div class="pc-metric-label">Est. Reach</div></div>
+      <div><div class="pc-metric-val">${p.impressions}</div><div class="pc-metric-label">Est. Impression</div></div>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════
+function showMainTab(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  setTimeout(renderAll,50);
+}
+
+function showDetailTab(id,btn){
+  document.querySelectorAll('.detail-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.detail-section').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('dtab-'+id).classList.add('active');
+}
+
+function showSubTab(btn,target){
+  document.querySelectorAll('.detail-subtab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  ['social','news','reviews'].forEach(t=>document.getElementById('subtab-'+t).style.display=t===target?'block':'none');
+}
+
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
+function fmtK(n){n=Number(n);if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return String(n);}
+
+// ══════════════════════════════════════════════════════
+// N8N WEBHOOK — SETTINGS
+// ══════════════════════════════════════════════════════
+let WEBHOOK_URL = localStorage.getItem('n8n_webhook_url') || '';
+
+function openSettings(){
+  document.getElementById('webhook-url-input').value = WEBHOOK_URL;
+  document.getElementById('modal-status').className = 'modal-status';
+  document.getElementById('modal-status').textContent = '';
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings(){
+  document.getElementById('settings-modal').classList.remove('open');
+}
+function saveWebhook(){
+  const url = document.getElementById('webhook-url-input').value.trim();
+  if(!url){ alert('Please enter a webhook URL'); return; }
+  WEBHOOK_URL = url;
+  localStorage.setItem('n8n_webhook_url', url);
+  closeSettings();
+  fetchData();
+}
+async function testWebhook(){
+  const url = document.getElementById('webhook-url-input').value.trim();
+  if(!url){ alert('Enter a URL first'); return; }
+  const st = document.getElementById('modal-status');
+  st.className = 'modal-status'; st.textContent = 'Testing…'; st.style.display='block';
+  try{
+    const res = await fetch(url, {signal: AbortSignal.timeout(8000)});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const json = await res.json();
+    const count = (json.posts||json.raw_posts||json||[]).length;
+    st.className = 'modal-status ok';
+    st.textContent = `✓ Connected — ${count} posts found`;
+  } catch(e){
+    st.className = 'modal-status err';
+    st.textContent = '✗ Failed: '+e.message+'. Check your URL and CORS headers.';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// N8N WEBHOOK — FETCH & PROCESS
+// ══════════════════════════════════════════════════════
+function setLive(state){ // 'live' | 'offline' | 'loading'
+  const dot = document.getElementById('live-dot');
+  dot.className = 'live-dot' + (state==='live'?' ':(state==='loading'?' loading-dot ':' offline'));
+}
+function showLoadOverlay(show, msg='Fetching data from n8n…'){
+  const el = document.getElementById('load-overlay');
+  document.getElementById('load-text').textContent = msg;
+  el.classList.toggle('open', show);
+}
+function showDataStatus(msg){
+  const bar = document.getElementById('data-status');
+  document.getElementById('data-status-text').textContent = msg;
+  bar.classList.add('show');
+}
+function setRefreshLoading(on){
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.toggle('loading', on);
+  btn.disabled = on;
+}
+
+async function fetchData(){
+  if(!WEBHOOK_URL){
+    openSettings();
+    return;
+  }
+  setLive('loading');
+  setRefreshLoading(true);
+  showLoadOverlay(true);
+  try{
+    const res = await fetch(WEBHOOK_URL, {signal: AbortSignal.timeout(30000)});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const json = await res.json();
+    processWebhookData(json);
+    renderAll();
+    setLive('live');
+    showDataStatus('Live data loaded from n8n · '+new Date().toLocaleTimeString());
+  } catch(e){
+    setLive('offline');
+    showDataStatus('Could not load live data ('+e.message+'). Showing sample data.');
+  } finally{
+    setRefreshLoading(false);
+    showLoadOverlay(false);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// DATA PROCESSOR — handles your n8n dashboard_json format
+// ══════════════════════════════════════════════════════
+function processWebhookData(json){
+  // Your n8n workflow returns an array of brand objects each with dashboard_json field
+  const rawArray = Array.isArray(json) ? json : [json];
+
+  // Parse dashboard_json for each brand item
+  const brandItems = rawArray.map(item=>{
+    let d = item;
+    if(typeof item.dashboard_json === 'string'){
+      try{ d = JSON.parse(item.dashboard_json); } catch(e){ d = item; }
+    } else if(item.dashboard_json && typeof item.dashboard_json === 'object'){
+      d = item.dashboard_json;
+    }
+    return d;
+  }).filter(d => d && d.brand);
+
+  // If no dashboard_json found, fall back to raw posts array
+  if(!brandItems.length){
+    let posts = json.posts || json.raw_posts || (Array.isArray(json)?json:[]);
+    if(!posts.length) return;
+    processFlatPosts(posts); return;
+  }
+
+  const PLT_MAP = {linkedin:'LinkedIn',instagram:'Instagram',facebook:'Facebook',youtube:'YouTube',twitter:'Twitter'};
+  const KW_COLORS=['#5c63d4','#7b3ec8','#2e9e5b','#d4880a','#c43a5b','#0a6ebf','#e74c3c','#16a085','#8e44ad','#2980b9','#e67e22','#27ae60','#e91e63','#ff5722','#795548'];
+  const AVATAR_COLORS=['#4b52d4','#52c41a','#ff4d4f','#faad14','#13c2c2','#722ed1','#eb2f96','#1890ff'];
+  const INTENT_NAMES=['Appreciation','Product Inquiry','General Discussion','Complaint','Feedback','Suggestion','Brand Promo','Support Request'];
+  const INTENT_ICONS=['👍','🔍','💬','⚠️','📝','💡','📣','🛠'];
+  const INTENT_CLR=['#52c41a','#4b52d4','#1890ff','#ff4d4f','#faad14','#722ed1','#13c2c2','#eb2f96'];
+
+  const brands = brandItems.map(d=>d.brand);
+
+  // ── Update brand dropdown ──
+  const sel = document.getElementById('brand-select');
+  sel.innerHTML = '<option value="all">All Brands</option>' +
+    brands.map(b=>`<option value="${b}">${b}</option>`).join('');
+  if(!brands.includes(currentBrand)) currentBrand='all';
+  sel.value = currentBrand;
+
+  // ── BRAND_DATA ──
+  let allT=0,allP=0,allN=0,allNeu=0,allU=0;
+  brandItems.forEach(d=>{
+    const t=d.totals||{};
+    BRAND_DATA[d.brand]={total:t.total||0,pos:t.pos||0,neg:t.neg||0,neu:t.neu||0,unique:t.unique||0,posPct:t.posPct||0,negPct:t.negPct||0,neuPct:t.neuPct||0};
+    allT+=t.total||0; allP+=t.pos||0; allN+=t.neg||0; allNeu+=t.neu||0; allU+=t.unique||0;
+  });
+  BRAND_DATA.all={total:allT,pos:allP,neg:allN,neu:allNeu,unique:allU,
+    posPct:allT?+(allP/allT*100).toFixed(1):0,negPct:allT?+(allN/allT*100).toFixed(1):0,neuPct:allT?+(allNeu/allT*100).toFixed(1):0};
+
+  // ── SENT_BREAKDOWN ──
+  const allBD={};
+  brandItems.forEach(d=>{
+    const bd=d.sentiment_breakdown||{};
+    SENT_BREAKDOWN[d.brand]={};
+    Object.entries(bd).forEach(([plt,c])=>{
+      const key=PLT_MAP[plt.toLowerCase()]||plt;
+      SENT_BREAKDOWN[d.brand][key]={pos:c.pos||0,neg:c.neg||0,neu:c.neu||0};
+      if(!allBD[key]) allBD[key]={pos:0,neg:0,neu:0};
+      allBD[key].pos+=c.pos||0; allBD[key].neg+=c.neg||0; allBD[key].neu+=c.neu||0;
+    });
+  });
+  SENT_BREAKDOWN.all=allBD;
+
+  // ── TREND_DATA ──
+  // Collect all month labels across all brands
+  const monthSet=new Set();
+  brandItems.forEach(d=>{
+    Object.values(d.trend||{}).forEach(mc=>Object.keys(mc).forEach(m=>monthSet.add(m)));
+  });
+  const MON_ORDER=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const allMonths=[...monthSet].sort((a,b)=>{
+    const [ma,ya]=a.split(' '); const [mb,yb]=b.split(' ');
+    return ya!==yb ? parseInt(ya)-parseInt(yb) : MON_ORDER.indexOf(ma)-MON_ORDER.indexOf(mb);
+  });
+  MONTHS.length=0; allMonths.forEach(m=>MONTHS.push(m));
+  const PLTS=['Instagram','LinkedIn','Facebook','YouTube','Twitter'];
+  const newTrend={all:{}}; PLTS.forEach(p=>{newTrend.all[p]=new Array(allMonths.length).fill(0);});
+  brandItems.forEach(d=>{
+    newTrend[d.brand]={}; PLTS.forEach(p=>{newTrend[d.brand][p]=new Array(allMonths.length).fill(0);});
+    Object.entries(d.trend||{}).forEach(([plt,mc])=>{
+      const key=PLT_MAP[plt.toLowerCase()]||plt;
+      Object.entries(mc).forEach(([month,count])=>{
+        const idx=allMonths.indexOf(month);
+        if(idx>=0){
+          if(!newTrend[d.brand][key]) newTrend[d.brand][key]=new Array(allMonths.length).fill(0);
+          newTrend[d.brand][key][idx]+=count;
+          newTrend.all[key][idx]+=count;
+        }
+      });
+    });
+  });
+  Object.assign(TREND_DATA,newTrend);
+
+  // ── KEYWORDS (aggregate across brands) ──
+  const kwMap={};
+  brandItems.forEach(d=>{
+    (d.keywords||[]).forEach(kw=>{
+      const name=(kw.keyword||kw.name||kw||'').toLowerCase().trim();
+      if(name.length<2) return;
+      kwMap[name]=(kwMap[name]||0)+(kw.count||1);
+    });
+  });
+  const kwEntries=Object.entries(kwMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const kwMax=kwEntries[0]?.[1]||1;
+  KEYWORDS.length=0;
+  kwEntries.forEach(([name,count],i)=>{
+    KEYWORDS.push({name,count,pct:+(count/kwMax*100).toFixed(1),nss:+(((count/kwMax)*20)-10).toFixed(1),color:KW_COLORS[i%15]});
+  });
+
+  // ── ALL_POSTS (combine all brands, deduplicate) ──
+  ALL_POSTS.length=0;
+  const seenUrls=new Set();
+  brandItems.forEach(d=>{
+    (d.posts||[]).forEach((p,i)=>{
+      const url=p.post_url||p.url||'';
+      const key=d.brand+'||'+url;
+      if(seenUrls.has(key)) return;
+      seenUrls.add(key);
+      const cat=(p.sentiment||p.sentiment_category||'neutral').toLowerCase();
+      const plt=(p.plateform||p.platform||'instagram').toLowerCase(); // handles typo
+      ALL_POSTS.push({
+        brand:d.brand,
+        sentiment:cat,
+        platform:plt,
+        name:p.name||p.handle||d.brand,
+        handle:'@'+(p.handle||d.brand).toLowerCase().replace(/\s+/g,'_'),
+        date:p.display_date||p.timestamps||p.run_date||'N/A',
+        text:p.post_text||p.text||'',
+        likes:Number(p.likes||0),
+        comments:Number(p.comments||0),
+        shares:Number(p.shares||0),
+        views:Number(p.views||0),
+        engagement:Number(p.engagement||0),
+        engRate:p.eng_rate?(Number(p.eng_rate)).toFixed(2)+'%':'0%',
+        reach:p.est_reach||'0',
+        impressions:p.est_impressions||'0',
+        color:p.color||AVATAR_COLORS[i%8],
+        thumb:p.thumb||'',
+        url,
+        intent:p.intent||'General Discussion',
+      });
+    });
+  });
+
+  // ── INTENT_DATA from posts' intent field ──
+  function buildIntents(postsArr){
+    const buckets={}; INTENT_NAMES.forEach(n=>{buckets[n]={total:0,pos:0,neg:0,neu:0};});
+    postsArr.forEach(p=>{
+      const intent=p.intent||'General Discussion';
+      const b=buckets[intent]||buckets['General Discussion'];
+      b.total++;
+      if(p.sentiment==='positive') b.pos++;
+      else if(p.sentiment==='negative') b.neg++;
+      else b.neu++;
+    });
+    return INTENT_NAMES.map((name,i)=>({name,icon:INTENT_ICONS[i],color:INTENT_CLR[i],...buckets[name]}));
+  }
+  INTENT_DATA.all=buildIntents(ALL_POSTS);
+  brands.forEach(b=>{ INTENT_DATA[b]=buildIntents(ALL_POSTS.filter(p=>p.brand===b)); });
+
+  // ── Duration bar ──
+  const dates=ALL_POSTS.map(p=>new Date(p.date)).filter(d=>!isNaN(d)).sort((a,b)=>a-b);
+  if(dates.length>=2){
+    const fmt=d=>d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    const days=Math.round((dates[dates.length-1]-dates[0])/(864e5));
+    document.getElementById('duration-text').textContent=`${days} day(s) (${fmt(dates[0])} – ${fmt(dates[dates.length-1])})`;
+  }
+}
+
+// Fallback: flat posts array (legacy format)
+function processFlatPosts(posts){
+  // Simple dedup + derive sentiment counts
+  if(!posts.length) return;
+
+  // ── Deduplicate ──
+  const seen = new Set();
+  posts = posts.filter(p=>{
+    const key = (p.brand||'')+'||'+(p.post_url||p.url||'');
+    if(seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+
+  const PLT_COLORS = {Instagram:'#eb7ea8',LinkedIn:'#5b8dee',Facebook:'#5b9ded',YouTube:'#f16060',Twitter:'#5acce6'};
+  const AVATAR_COLORS = ['#4b52d4','#52c41a','#ff4d4f','#faad14','#13c2c2','#722ed1','#eb2f96','#1890ff'];
+
+  // ── Compute brand list ──
+  const brandSet = new Set(posts.map(p=>p.brand).filter(Boolean));
+  const brands = [...brandSet];
+
+  // update brand dropdown
+  const sel = document.getElementById('brand-select');
+  sel.innerHTML = '<option value="all">All Brands</option>' +
+    brands.map(b=>`<option value="${b}">${b}</option>`).join('');
+  if(!brands.includes(currentBrand)) currentBrand = 'all';
+  sel.value = currentBrand;
+
+  // ── Helper: get posts for brand ──
+  const forBrand = b => b==='all' ? posts : posts.filter(p=>p.brand===b);
+
+  function computeStats(arr){
+    let pos=0,neg=0,neu=0; const users=new Set();
+    arr.forEach(p=>{
+      const cat=(p.sentiment_category||p.sentiment||'neutral').toLowerCase();
+      if(cat==='positive'||cat==='pos') pos++;
+      else if(cat==='negative'||cat==='neg') neg++;
+      else neu++;
+      if(p.username||p.handle) users.add(p.username||p.handle);
+    });
+    const total=arr.length||1;
+    return {total:arr.length,pos,neg,neu,unique:users.size,posPct:+(pos/total*100).toFixed(1),negPct:+(neg/total*100).toFixed(1),neuPct:+(neu/total*100).toFixed(1)};
+  }
+
+  // ── BRAND_DATA ──
+  const newBrandData = {all: computeStats(posts)};
+  brands.forEach(b=>{ newBrandData[b] = computeStats(forBrand(b)); });
+  Object.assign(BRAND_DATA, newBrandData);
+
+  // ── SENT_BREAKDOWN (per brand per platform) ──
+  const plts = ['Instagram','LinkedIn','Facebook','YouTube','Twitter'];
+  function computeBreakdown(arr){
+    const bd={};
+    plts.forEach(p=>{bd[p]={pos:0,neg:0,neu:0};});
+    arr.forEach(p=>{
+      const plt=p.platform||'Instagram';
+      if(!bd[plt]) bd[plt]={pos:0,neg:0,neu:0};
+      const cat=(p.sentiment_category||p.sentiment||'neutral').toLowerCase();
+      if(cat==='positive'||cat==='pos') bd[plt].pos++;
+      else if(cat==='negative'||cat==='neg') bd[plt].neg++;
+      else bd[plt].neu++;
+    });
+    return bd;
+  }
+  SENT_BREAKDOWN.all = computeBreakdown(posts);
+  brands.forEach(b=>{ SENT_BREAKDOWN[b]=computeBreakdown(forBrand(b)); });
+
+  // ── TREND_DATA (monthly per platform) ──
+  const MONTH_LABELS = ['Jan\'25','Feb\'25','Mar\'25','Apr\'25','May\'25','Jun\'25','Jul\'25','Aug\'25','Sep\'25','Oct\'25','Nov\'25','Dec\'25','Jan\'26','Feb\'26','Mar\'26','Apr\'26','May\'26'];
+  function computeTrend(arr){
+    const td={};
+    plts.forEach(p=>{td[p]=new Array(MONTH_LABELS.length).fill(0);});
+    arr.forEach(p=>{
+      const plt=p.platform||'Instagram';
+      if(!td[plt]) td[plt]=new Array(MONTH_LABELS.length).fill(0);
+      const ts=p.timestamp||p.date||p.created_at||'';
+      if(ts){
+        const d=new Date(ts);
+        if(!isNaN(d)){
+          const lbl = d.toLocaleString('en',{month:'short',year:'2-digit'}).replace(' ',"'");
+          const idx=MONTH_LABELS.indexOf(lbl);
+          if(idx>=0) td[plt][idx]++;
+        }
+      }
+    });
+    return td;
+  }
+  Object.assign(TREND_DATA, {all:computeTrend(posts)});
+  brands.forEach(b=>{ TREND_DATA[b]=computeTrend(forBrand(b)); });
+  // update MONTHS labels
+  MONTHS.length=0; MONTH_LABELS.forEach(m=>MONTHS.push(m));
+
+  // ── KEYWORDS from top_keywords field ──
+  const kwFreq={};
+  posts.forEach(p=>{
+    const raw=p.top_keywords||p.keywords||'';
+    const list=Array.isArray(raw)?raw:raw.split(/[,;|]+/).map(k=>k.trim().toLowerCase()).filter(k=>k.length>2);
+    list.forEach(k=>{kwFreq[k]=(kwFreq[k]||0)+1;});
+  });
+  const kwEntries=Object.entries(kwFreq).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const kwMax=kwEntries[0]?.[1]||1;
+  const KW_COLORS=['#5c63d4','#7b3ec8','#2e9e5b','#d4880a','#c43a5b','#0a6ebf','#e74c3c','#16a085','#8e44ad','#2980b9','#e67e22','#27ae60','#e91e63','#ff5722','#795548'];
+  KEYWORDS.length=0;
+  kwEntries.forEach(([name,count],i)=>{
+    KEYWORDS.push({name,count,pct:+(count/kwMax*100).toFixed(1),nss:+(((count/kwMax)*20)-10).toFixed(1),color:KW_COLORS[i%KW_COLORS.length]});
+  });
+
+  // ── INTENT_DATA from sentiment distribution per keyword/category ──
+  const INTENT_ICONS=['👍','🔍','💬','⚠️','📝','💡','📣','🛠'];
+  const INTENT_NAMES=['Appreciation','Product Inquiry','General Discussion','Complaint','Feedback','Suggestion','Brand Promo','Support Request'];
+  const INTENT_CLR=['#52c41a','#4b52d4','#1890ff','#ff4d4f','#faad14','#722ed1','#13c2c2','#eb2f96'];
+
+  function deriveIntents(arr){
+    const buckets={Appreciation:{total:0,pos:0,neg:0,neu:0},
+      'Product Inquiry':{total:0,pos:0,neg:0,neu:0},
+      'General Discussion':{total:0,pos:0,neg:0,neu:0},
+      Complaint:{total:0,pos:0,neg:0,neu:0},
+      Feedback:{total:0,pos:0,neg:0,neu:0},
+      Suggestion:{total:0,pos:0,neg:0,neu:0},
+      'Brand Promo':{total:0,pos:0,neg:0,neu:0},
+      'Support Request':{total:0,pos:0,neg:0,neu:0}};
+    arr.forEach(p=>{
+      const cat=(p.sentiment_category||p.sentiment||'neutral').toLowerCase();
+      const kws=(p.top_keywords||p.keywords||'').toLowerCase();
+      const txt=(p.text||'').toLowerCase();
+      let intent='General Discussion';
+      if(cat==='negative'&&(kws.includes('issue')||kws.includes('problem')||kws.includes('broken')||txt.includes('problem')||txt.includes('issue'))) intent='Complaint';
+      else if(cat==='negative'&&(kws.includes('help')||kws.includes('support')||txt.includes('help'))) intent='Support Request';
+      else if(cat==='negative') intent='Complaint';
+      else if(cat==='positive'&&(kws.includes('love')||kws.includes('great')||kws.includes('amazing')||txt.includes('love')||txt.includes('great'))) intent='Appreciation';
+      else if(cat==='positive'&&(kws.includes('promo')||kws.includes('launch')||kws.includes('announce'))) intent='Brand Promo';
+      else if(cat==='positive') intent='Appreciation';
+      else if(kws.includes('suggest')||kws.includes('should')||txt.includes('suggest')) intent='Suggestion';
+      else if(kws.includes('feedback')||kws.includes('review')||txt.includes('review')) intent='Feedback';
+      else if(kws.includes('query')||kws.includes('?')||txt.includes('?')) intent='Product Inquiry';
+      const b=buckets[intent];
+      b.total++;
+      if(cat==='positive'||cat==='pos') b.pos++;
+      else if(cat==='negative'||cat==='neg') b.neg++;
+      else b.neu++;
+    });
+    return INTENT_NAMES.map((name,i)=>({name,icon:INTENT_ICONS[i],color:INTENT_CLR[i],...buckets[name]}));
+  }
+  INTENT_DATA.all = deriveIntents(posts);
+  brands.forEach(b=>{ INTENT_DATA[b]=deriveIntents(forBrand(b)); });
+
+  // ── ALL_POSTS for detail view ──
+  ALL_POSTS.length=0;
+  posts.forEach((p,i)=>{
+    const cat=(p.sentiment_category||p.sentiment||'neutral').toLowerCase();
+    const plt=(p.platform||'Instagram').toLowerCase();
+    const likes=Number(p.likes||0), comments=Number(p.comments||0), shares=Number(p.shares||0), views=Number(p.views||0);
+    const eng=likes+comments+shares;
+    ALL_POSTS.push({
+      sentiment: (cat==='pos'?'positive':cat==='neg'?'negative':cat),
+      platform: plt,
+      name: p.display_name||p.username||p.brand||'User',
+      handle: '@'+(p.username||p.brand||'user').toLowerCase().replace(/\s+/g,'_'),
+      date: p.timestamp||p.date||p.created_at||'N/A',
+      text: p.text||p.content||'',
+      likes, comments, shares, views,
+      engagement: eng,
+      engRate: (eng/(views||1000)*100).toFixed(2)+'%',
+      reach: fmtK(views||Math.round(likes*18)),
+      impressions: fmtK(views||Math.round(likes*30)),
+      color: AVATAR_COLORS[i%AVATAR_COLORS.length],
+      url: p.post_url||p.url||'#',
+    });
+  });
+
+  // update duration display
+  const dates = posts.map(p=>new Date(p.timestamp||p.date||p.created_at||'')).filter(d=>!isNaN(d)).sort((a,b)=>a-b);
+  if(dates.length>=2){
+    const fmt=d=>d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    const days=Math.round((dates[dates.length-1]-dates[0])/(864e5));
+    document.getElementById('duration-text').textContent=`${days} day(s) (${fmt(dates[0])} – ${fmt(dates[dates.length-1])})`;
+  }
+}
+
+// ── Auto-load on page open if URL is already saved ──
+window.addEventListener('load', ()=>{
+  if(WEBHOOK_URL) fetchData();
+  else setLive('offline');
+});
+</script>
+</body>
+</html>
