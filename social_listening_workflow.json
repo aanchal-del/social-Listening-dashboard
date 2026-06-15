@@ -1,0 +1,1168 @@
+{
+  "name": "Social Listening — Trigger + Status + Worker (async)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analyze",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "8f6cde68-1f4e-4381-b8ff-5ba28fbb0433",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -432,
+        -480
+      ],
+      "webhookId": "sl-analyze-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst brands = (body.brands || []).map(b => String(b).trim()).filter(Boolean);\nconst run_id = 'run_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);\nconst run_date = new Date().toISOString().split('T')[0];\nif (brands.length === 0) return [{ json: { run_id, brand: '', run_date, status: 'error' } }];\nreturn brands.map(brand => ({ json: { run_id, brand, run_date, status: 'queued' } }));"
+      },
+      "id": "418c31e1-3dd1-4143-8d20-366d6bb9fe3c",
+      "name": "Init Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4",
+          "mode": "list",
+          "cachedResultName": "AI automaiton",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 869481601,
+          "mode": "list",
+          "cachedResultName": "AI_Insights",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4/edit#gid=869481601"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "eaa8c3e1-42bc-422b-a380-23b691cd623f",
+      "name": "Write Queued Rows",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [
+        64,
+        -480
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "pKsnRZHoHeIn01s5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $('Init Run').all().map(i => i.json);\nconst run_id = items[0] ? items[0].run_id : '';\nconst brands = items.map(i => i.brand).filter(Boolean);\nconst force = (($('Webhook').first().json.body || {}).force) === true;\nreturn [{ json: { run_id, brands, force } }];"
+      },
+      "id": "8d0426b6-73b5-4f9f-b034-be1dcfe0472e",
+      "name": "Build Worker Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "OxhjOfMTotnKshMc",
+          "mode": "list",
+          "cachedResultName": "Social Listening - Worker"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "dde34ece-41b1-4737-9564-1e7c1dd61cf9",
+      "name": "Start Worker (fire & forget)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        544,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ run_id: $('Init Run').first().json.run_id, status: 'queued', total: $('Init Run').all().length }) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "82cd5b39-6025-4786-a7e8-8e371e1531c7",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        784,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "path": "status",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "a521e3fc-3133-44a1-a4f6-af1f452907aa",
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -256,
+        16
+      ],
+      "webhookId": "sl-status-webhook"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4",
+          "mode": "list",
+          "cachedResultName": "AI automaiton",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 869481601,
+          "mode": "list",
+          "cachedResultName": "AI_Insights",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4/edit#gid=869481601"
+        },
+        "options": {}
+      },
+      "id": "c47aed55-bf84-4649-ad15-629c848eff9f",
+      "name": "Read Run Rows",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        16
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "pKsnRZHoHeIn01s5",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const reqRun = String((($('Webhook1').first().json.query)||{}).run_id || '');\nconst rows = $input.all().map(i => i.json).filter(r => r && String(r.run_id) === reqRun);\nconst total = rows.length;\nconst done = rows.filter(r => String(r.status).toLowerCase() === 'done').length;\nconst errored = rows.filter(r => String(r.status).toLowerCase() === 'error').length;\nfunction parse(r){ try { return r.dashboard_json ? JSON.parse(r.dashboard_json) : null; } catch(e){ return null; } }\nreturn [{ json: {\n  run_id: reqRun,\n  finished: total > 0 && (done + errored) >= total,\n  total, done, errored,\n  brands: rows.map(r => ({\n    brand: r.brand,\n    status: String(r.status || 'queued').toLowerCase(),\n    dashboard: String(r.status).toLowerCase() === 'done' ? parse(r) : null\n  }))\n} }];"
+      },
+      "id": "b620a68b-8a92-438b-a7ab-b0df40a25b6b",
+      "name": "Build Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "59ba7561-561a-43d6-9ec5-c9a24f288e9a",
+      "name": "Respond1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        464,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "a6174384-1cd7-4916-a65d-ff69b51bced9",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -48,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4",
+          "mode": "list",
+          "cachedResultName": "AI automaiton",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 788732305,
+          "mode": "list",
+          "cachedResultName": "Brand",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4/edit#gid=788732305"
+        },
+        "options": {}
+      },
+      "id": "f4bc2755-2451-4fe8-87b1-d7498095e10b",
+      "name": "Read Brand List",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [
+        192,
+        1184
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "pKsnRZHoHeIn01s5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const trig = $('Execute Workflow Trigger').first().json || {};\nconst requested = (trig.brands || []).map(b => String(b).trim().toLowerCase());\nif (requested.length === 0) return $input.all();\nreturn $input.all().filter(it =>\n  requested.includes(String(it.json['Brand Name'] || '').trim().toLowerCase())\n);\n"
+      },
+      "id": "a62e11a7-23c0-4e69-b516-6b32a5140ff3",
+      "name": "Filter Requested Brands",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Sanitize handles so the scrapers get the format each API expects.\n// Tolerates leading @, stray spaces, and full URLs pasted into the sheet.\nfunction bare(v){\n  return String(v || '')\n    .trim()\n    .replace(/^@+/, '')          // drop leading @\n    .replace(/\\s+/g, '');        // drop internal/trailing spaces\n}\nfunction slug(v){\n  // LinkedIn company slug: strip URL if pasted, lowercase, spaces -> hyphen\n  let s = String(v || '').trim();\n  const m = s.match(/linkedin\\.com\\/company\\/([^\\/?#]+)/i);\n  if (m) s = m[1];\n  return s.toLowerCase().replace(/\\s+/g, '-').replace(/^@+/, '');\n}\nreturn $input.all().map(it => {\n  const r = it.json;\n  return { json: {\n    ...r,\n    'Brand Name':       (r['Brand Name'] || '').trim(),\n    'LinkedIn_Handle':  slug(r['LinkedIn_Handle']),\n    'Instagram_Handle': bare(r['Instagram_Handle']),\n    'YouTube_Handle':   bare(r['YouTube_Handle']),\n    'Facebook_Handle':  bare(r['Facebook_Handle']),\n    'Twitter_Handle':   bare(r['Twitter_Handle'])\n  }};\n});"
+      },
+      "id": "561fd5bd-8874-4648-b9f7-8afd2e009d0e",
+      "name": "Clean Handles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "99f8e12d-4e40-4c1e-876e-3cf0383d654b",
+      "name": "Loop Each Brand",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        912,
+        1184
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.scrapecreators.com/v1/linkedin/company/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "=https://linkedin.com/company/{{$json.LinkedIn_Handle}}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "90623720-39b7-47ea-a4b2-8dd226082055",
+      "name": "LinkedIn Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1056,
+        784
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZembUJXJHUn71etK",
+          "name": "Scrape creator"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const brand = $('Loop Each Brand').item.json['Brand Name'] || '';\nconst handle = $('Loop Each Brand').item.json['LinkedIn_Handle'] || '';\nconst data = $input.first().json;\nconst posts = Array.isArray(data.posts) ? data.posts : [];\nif (posts.length === 0) return [{ json: { _source: 'linkedin', _brand: brand, _handle: handle, _empty: true } }];\nreturn posts.map(p => ({ json: { ...p, _source: 'linkedin', _brand: brand, _handle: handle } }));"
+      },
+      "id": "4835d716-6fe8-4cd0-a914-83a47a54ebf1",
+      "name": "LinkedIn Tag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.scrapecreators.com/v2/instagram/user/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "handle",
+              "value": "={{$json.Instagram_Handle}}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "a70a205f-e774-4652-8b96-cbd645627c5e",
+      "name": "Instagram Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1056,
+        944
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZembUJXJHUn71etK",
+          "name": "Scrape creator"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const brand = $('Loop Each Brand').item.json['Brand Name'] || '';\nconst handle = $('Loop Each Brand').item.json['Instagram_Handle'] || '';\nconst data = $input.first().json;\nlet posts = [];\nif (Array.isArray(data.posts)) posts = data.posts;\nelse if (data.data?.user?.edge_owner_to_timeline_media?.edges) posts = data.data.user.edge_owner_to_timeline_media.edges.map(e => e.node);\nelse if (Array.isArray(data.data)) posts = data.data;\nelse if (Array.isArray(data.items)) posts = data.items;\nif (posts.length === 0) return [{ json: { _source: 'instagram', _brand: brand, _handle: handle, _empty: true } }];\nreturn posts.map(p => {\n  let captionText = '';\n  if (typeof p.caption === 'string') captionText = p.caption;\n  else if (p.caption && typeof p.caption === 'object') captionText = p.caption.text || '';\n  else if (p.edge_media_to_caption?.edges?.[0]?.node?.text) captionText = p.edge_media_to_caption.edges[0].node.text;\n  const likes = p.like_count ?? p.likes ?? p.likeCount ?? p.edge_liked_by?.count ?? 0;\n  const comments = p.comment_count ?? p.comments ?? p.commentCount ?? p.edge_media_to_comment?.count ?? 0;\n  let timestamp = '';\n  if (p.taken_at) timestamp = new Date(p.taken_at * 1000).toISOString();\n  else if (p.taken_at_timestamp) timestamp = new Date(p.taken_at_timestamp * 1000).toISOString();\n  else if (p.timestamp) timestamp = p.timestamp;\n  const thumb = p.display_url || p.thumbnail_url || p.image_versions2?.candidates?.[0]?.url || (p.image_versions?.items?.[0]?.url) || '';\n  return { json: { ...p, _caption: captionText, _likes: likes, _comments: comments, _timestamp: timestamp, _thumb: thumb, _source: 'instagram', _brand: brand, _handle: handle } };\n});"
+      },
+      "id": "b34fc078-c2af-46ed-b65f-4a55f792b4c9",
+      "name": "Instagram Tag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        944
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.scrapecreators.com/v1/youtube/channel-videos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "handle",
+              "value": "={{$json.YouTube_Handle}}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "ba7ad4b7-66c4-4a99-844a-70951c695af1",
+      "name": "YouTube Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1056,
+        1104
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZembUJXJHUn71etK",
+          "name": "Scrape creator"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const brand = $('Loop Each Brand').item.json['Brand Name'] || '';\nconst handle = $('Loop Each Brand').item.json['YouTube_Handle'] || '';\nconst data = $input.first().json;\nlet posts = [];\nif (Array.isArray(data.videos)) posts = data.videos;\nelse if (Array.isArray(data.data)) posts = data.data;\nelse if (Array.isArray(data.items)) posts = data.items;\nelse if (data && typeof data === 'object') posts = [data];\nif (posts.length === 0) return [{ json: { _source: 'youtube', _brand: brand, _handle: handle, _empty: true } }];\nreturn posts.map(p => {\n  const thumb = p.thumbnail || p.thumbnails?.high?.url || p.thumbnails?.[0]?.url || '';\n  const views = p.viewCount ?? p.views ?? p.view_count ?? p.statistics?.viewCount ?? 0;\n  const likes = p.likeCount ?? p.likes ?? p.statistics?.likeCount ?? 0;\n  const comments = p.commentCount ?? p.comments ?? p.statistics?.commentCount ?? 0;\n  let timestamp = p.publishedAt || p.publishTime || p.uploadDate || '';\n  return { json: { ...p, _likes: likes, _comments: comments, _views: views, _thumb: thumb, _timestamp: timestamp, _source: 'youtube', _brand: brand, _handle: handle } };\n});"
+      },
+      "id": "ca89fee5-b080-48b8-85ea-5c22ec104bc6",
+      "name": "YouTube Tag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.scrapecreators.com/v1/facebook/profile/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "=https://www.facebook.com/{{$json.Facebook_Handle}}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "fb32510e-60c7-461f-85f0-c96e5ba2f3ba",
+      "name": "Facebook Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1056,
+        1264
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZembUJXJHUn71etK",
+          "name": "Scrape creator"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const brand = $('Loop Each Brand').item.json['Brand Name'] || '';\nconst handle = $('Loop Each Brand').item.json['Facebook_Handle'] || '';\nconst data = $input.first().json;\nlet posts = [];\nif (Array.isArray(data.posts)) posts = data.posts;\nelse if (Array.isArray(data.data)) posts = data.data;\nelse if (Array.isArray(data.items)) posts = data.items;\nif (posts.length === 0) return [{ json: { _source: 'facebook', _brand: brand, _handle: handle, _empty: true } }];\nreturn posts.map(p => ({\n  json: {\n    ...p,\n    _likes: p.reactionCount ?? p.like_count ?? 0,\n    _comments: p.commentCount ?? p.comment_count ?? 0,\n    _shares: p.shareCount ?? p.share_count ?? 0,\n    _views: p.videoViewCount ?? p.view_count ?? 0,\n    _thumb: p.imageUrl || p.thumbnailUrl || p.image || '',\n    _timestamp: p.publishTime ? new Date(p.publishTime * 1000).toISOString() : (p.timestamp || ''),\n    _source: 'facebook', _brand: brand, _handle: handle\n  }\n}));"
+      },
+      "id": "96bde3a0-d116-4644-a0dd-72b694904ee0",
+      "name": "Facebook Tag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.scrapecreators.com/v1/twitter/user-tweets",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "handle",
+              "value": "={{$json.Twitter_Handle}}"
+            },
+            {
+              "name": "trim",
+              "value": "true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "6bb0615f-b549-43cb-93a0-cb0d187962d9",
+      "name": "X Twitter Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1056,
+        1424
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZembUJXJHUn71etK",
+          "name": "Scrape creator"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const brand = $('Loop Each Brand').item.json['Brand Name'] || '';\nconst handle = $('Loop Each Brand').item.json['Twitter_Handle'] || '';\nconst data = $input.first().json;\nlet posts = [];\nif (Array.isArray(data.tweets)) posts = data.tweets;\nelse if (Array.isArray(data.data)) posts = data.data;\nelse if (Array.isArray(data.items)) posts = data.items;\nif (posts.length === 0) return [{ json: { _source: 'twitter', _brand: brand, _handle: handle, _empty: true } }];\nreturn posts.map(p => ({\n  json: {\n    ...p,\n    _likes: p.favorite_count ?? 0,\n    _comments: p.reply_count ?? 0,\n    _shares: p.retweet_count ?? 0,\n    _views: Number(p.view_count ?? 0),\n    _timestamp: p.created_at ? new Date(p.created_at).toISOString() : '',\n    _url: p.id ? `https://twitter.com/i/web/status/${p.id}` : (p.url || ''),\n    _text: p.full_text || p.text || '',\n    _thumb: p.media?.[0]?.media_url_https || p.entities?.media?.[0]?.media_url_https || '',\n    _source: 'twitter', _brand: brand, _handle: handle\n  }\n}));"
+      },
+      "id": "8a7f3b62-1824-46e3-b600-0690c1e69110",
+      "name": "Twitter Tag",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        1424
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "id": "deaed927-c6c6-42fb-a6d6-951819921a3e",
+      "name": "Merge All Platforms",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1728,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst normalized = [];\n\n// Deterministic estimate factors (no AI, no randomness)\n// reach ~ engagement * REACH_FACTOR, impressions ~ reach * IMPR_FACTOR\nconst REACH_FACTOR = { instagram: 90, linkedin: 60, facebook: 70, youtube: 1.2, twitter: 110 };\nconst IMPR_FACTOR = 1.5;\n\nfunction fmtK(n){ n=Number(n)||0; if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'K'; return String(n); }\n\nfor (const item of items) {\n  const p = item.json;\n  if (!p || p._empty) continue;\n  const source = p._source || 'unknown';\n  const brand  = p._brand  || '';\n  const handle = p._handle || '';\n\n  let post_url = p._url || '';\n  if (!post_url) {\n    if (p.shortcode) post_url = `https://www.instagram.com/p/${p.shortcode}/`;\n    else post_url = p.url || p.postUrl || p.link || p.permalinkUrl || p.videoUrl || String(p.id || '');\n  }\n\n  const post_text = p._text || p._caption || p.text ||\n    (typeof p.caption === 'string' ? p.caption : '') ||\n    p.edge_media_to_caption?.edges?.[0]?.node?.text ||\n    p.description || p.title || p.content || p.full_text || '';\n\n  const likes = Number(p._likes ?? p.likes ?? p.likesCount ?? p.likeCount ?? p.edge_liked_by?.count ?? p.numLikes ?? p.favoriteCount ?? p.favorite_count ?? 0) || 0;\n  const comments = Number(p._comments ?? p.comments ?? p.commentsCount ?? p.commentCount ?? p.edge_media_to_comment?.count ?? p.numComments ?? p.replyCount ?? p.reply_count ?? 0) || 0;\n  const shares = Number(p._shares ?? p.shares ?? p.sharesCount ?? p.shareCount ?? p.retweetCount ?? p.retweet_count ?? p.repostCount ?? 0) || 0;\n  const views = Number(p._views ?? p.views ?? p.viewCount ?? p.viewsCount ?? p.video_view_count ?? p.playCount ?? p.videoViewCount ?? p.view_count ?? 0) || 0;\n  const thumb = p._thumb || p.display_url || p.thumbnail || p.imageUrl || '';\n\n  let timestamp = p._timestamp || '';\n  if (!timestamp) timestamp = p.timestamp || p.datePublished || p.date || p.publishedAt || p.createdAt || p.time || p.created_at || '';\n  if (!timestamp && p.taken_at) timestamp = new Date(p.taken_at * 1000).toISOString();\n  else if (!timestamp && p.taken_at_timestamp) timestamp = new Date(p.taken_at_timestamp * 1000).toISOString();\n\n  // Derived metrics\n  const engagement = likes + comments + shares;\n  const rf = REACH_FACTOR[source] || 80;\n  const reach = source === 'youtube'\n      ? Math.round(views * rf)            // youtube: reach derived from views\n      : Math.round(engagement * rf + likes * 5);\n  const impressions = Math.round(reach * IMPR_FACTOR);\n  const denom = reach > 0 ? reach : (engagement > 0 ? engagement * 50 : 1);\n  const engRate = Math.min(100, Number(((engagement / denom) * 100).toFixed(1)));\n\n  // Format date as \"DD Mon YYYY\"\n  let displayDate = '';\n  if (timestamp) {\n    const dt = new Date(timestamp);\n    if (!isNaN(dt)) displayDate = dt.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });\n  }\n\n  normalized.push({\n    json: {\n      brand,\n      handle,\n      plateform: source,\n      post_url: String(post_url).substring(0, 500),\n      post_text: String(post_text).substring(0, 800),\n      likes, comments, shares, views,\n      engagement,\n      eng_rate: engRate,\n      est_reach: fmtK(reach),\n      est_impressions: fmtK(impressions),\n      thumb: String(thumb).substring(0, 500),\n      display_date: displayDate,\n      timestamps: String(timestamp),\n      run_date: new Date().toISOString().split('T')[0]\n    }\n  });\n}\n\nif (normalized.length === 0) {\n  return [{ json: { brand:'no_data', handle:'', plateform:'none', post_url:'', post_text:'', likes:0, comments:0, shares:0, views:0, engagement:0, eng_rate:0, est_reach:'0', est_impressions:'0', thumb:'', display_date:'', timestamps:'', run_date:new Date().toISOString().split('T')[0] } }];\n}\nreturn normalized;"
+      },
+      "id": "c7f8049a-af38-4e8f-9f34-5ba5461fdf0a",
+      "name": "Normalise Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1984,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4",
+          "mode": "list",
+          "cachedResultName": "AI automaiton",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1960450849,
+          "mode": "list",
+          "cachedResultName": "Raw_Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4/edit#gid=1960450849"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "900d21e4-337b-46d5-9fc9-2391a0988fad",
+      "name": "Write Raw Data",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [
+        2224,
+        1104
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "pKsnRZHoHeIn01s5",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "all_posts",
+        "options": {}
+      },
+      "id": "e091d683-bc60-4351-a825-abd06be83231",
+      "name": "Aggregate By Brand",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2464,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build a single rich prompt for NVIDIA NIM that returns EVERY dashboard block.\nconst posts = $input.first().json.all_posts || [];\nconst brandName = $('Loop Each Brand').first().json['Brand Name'] || '';\n\n// Trim posts to keep the prompt within context limits\nconst trimmed = posts\n  .filter(p => p.brand !== 'no_data')\n  .slice(0, 25)\n  .map((p, i) => ({\n    id: i,\n    platform: p.plateform,\n    text: (p.post_text || '').substring(0, 240),\n    likes: p.likes, comments: p.comments, shares: p.shares, views: p.views\n  }));\n\nconst schema = `Return ONLY valid raw JSON (no markdown, no backticks, no commentary) with EXACTLY this shape:\n{\n  \"sentiment_score\": <number 0-100>,\n  \"summary\": \"<max 220 chars market overview>\",\n  \"post_sentiments\": [ { \"id\": <int>, \"sentiment\": \"positive|negative|neutral\", \"intent\": \"Appreciation|Product Inquiry|General Discussion|Complaint|Feedback|Suggestion|Brand Promo|Support Request\" } ],\n  \"keywords\": [ { \"name\": \"<context>\", \"count\": <int>, \"nss\": <number -10..10> } ],\n  \"intents\": [ { \"name\": \"<intent>\", \"total\": <int>, \"pos\": <int>, \"neg\": <int>, \"neu\": <int> } ],\n  \"cross_brands\": [ { \"name\": \"<brand>\", \"weight\": <int 1-100> } ],\n  \"handles\": [ { \"name\": \"<@handle>\", \"weight\": <int 1-100> } ],\n  \"products\": [ { \"name\": \"<product>\", \"weight\": <int 1-100> } ],\n  \"product_sentiment\": [ { \"name\": \"<product>\", \"pos\": <int 0-100>, \"neg\": <int 0-100> } ],\n  \"locations\": [ { \"name\": \"<place>\", \"pos\": <int>, \"neg\": <int>, \"neu\": <int> } ]\n}\nRules:\n- post_sentiments MUST contain one entry per input post id.\n- keywords: 8-13 items, the key contexts/themes across posts.\n- intents: cover all 8 intent categories listed; set counts to 0 if absent.\n- cross_brands/handles/products: extract real entities mentioned; weight = relative frequency.\n- product_sentiment: pos+neg should sum to 100 per product.\n- locations: places mentioned or implied (default India-centric if unclear).`;\n\nconst promptText =\n  `You are a social-media analytics engine. Analyze these posts for the brand \"${brandName}\".\\n` +\n  schema + `\\nPosts JSON: ` + JSON.stringify(trimmed);\n\nreturn [{ json: { promptText, brandName, postCount: trimmed.length } }];"
+      },
+      "id": "7ce435ce-eb2c-4a69-b57e-daeb9dffad07",
+      "name": "Build AI Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2704,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: 'meta/llama-3.3-70b-instruct',\n  messages: [\n    { role: 'system', content: 'You are a precise analytics engine that returns only valid JSON.' },\n    { role: 'user', content: $json.promptText }\n  ],\n  temperature: 0.2,\n  max_tokens: 8000,\n  response_format: { type: 'json_object' }\n}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "3ca717e3-fc1f-4565-99b1-5009ad5216c3",
+      "name": "NVIDIA NIM Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2944,
+        1104
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "t6iXQijNY7VyWZp1",
+          "name": "Nvidia"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// NVIDIA NIM returns OpenAI-compatible shape: choices[0].message.content\nfunction salvageJSON(s){\n  let cleaned = String(s).replace(/```json/gi,'').replace(/```/g,'').trim();\n  const start = cleaned.indexOf('{');\n  if (start >= 0) cleaned = cleaned.slice(start);\n  try { return JSON.parse(cleaned); } catch(e) {}\n  let depth=0, inStr=false, esc=false, lastSafe=-1;\n  for (let i=0;i<cleaned.length;i++){\n    const c=cleaned[i];\n    if (inStr){ if(esc) esc=false; else if(c==='\\\\') esc=true; else if(c==='\"') inStr=false; continue; }\n    if (c==='\"'){ inStr=true; continue; }\n    if (c==='{'||c==='[') depth++;\n    else if (c==='}'||c===']'){ depth--; if(depth===1) lastSafe=i; }\n  }\n  if (lastSafe>0){\n    let frag = cleaned.slice(0,lastSafe+1).replace(/,\\s*$/,'') + '}';\n    try { return JSON.parse(frag); } catch(e) {}\n  }\n  return null;\n}\n\nlet resp;\ntry {\n  const raw = $json.choices?.[0]?.message?.content ?? $json.content ?? '';\n  resp = salvageJSON(raw) || { sentiment_score:50, summary:'AI returned unparseable JSON', post_sentiments:[], keywords:[], intents:[], cross_brands:[], handles:[], products:[], product_sentiment:[], locations:[] };\n  ['post_sentiments','keywords','intents','cross_brands','handles','products','product_sentiment','locations'].forEach(k => { if(!Array.isArray(resp[k])) resp[k]=[]; });\n} catch (e) {\n  resp = { sentiment_score:50, summary:'Parse error: '+e.message, post_sentiments:[], keywords:[], intents:[], cross_brands:[], handles:[], products:[], product_sentiment:[], locations:[] };\n}\n\nconst brandName = $('Loop Each Brand').first().json['Brand Name'];\nconst posts = $('Aggregate By Brand').first().json.all_posts || [];\nconst realPosts = posts.filter(p => p.brand !== 'no_data');\n\nconst sentMap = {};\n(resp.post_sentiments || []).forEach(s => { sentMap[s.id] = s; });\nconst PLT_COLOR = { instagram:'#eb7ea8', linkedin:'#5b8dee', facebook:'#5b9ded', youtube:'#f16060', twitter:'#5acce6' };\nconst enrichedPosts = realPosts.map((p, i) => ({\n  ...p,\n  name: p.handle ? String(p.handle).replace(/^@/, '').replace(/[-_]/g, ' ').replace(/\\b\\w/g, c => c.toUpperCase()) : (p.brand || ''),\n  color: PLT_COLOR[p.plateform] || '#4b52d4',\n  sentiment: sentMap[i]?.sentiment || 'neutral',\n  intent: sentMap[i]?.intent || 'General Discussion'\n}));\n\nlet pos=0, neg=0, neu=0;\nenrichedPosts.forEach(p => { if(p.sentiment==='positive') pos++; else if(p.sentiment==='negative') neg++; else neu++; });\nconst total = enrichedPosts.length || 0;\nconst pct = n => total ? Number(((n/total)*100).toFixed(2)) : 0;\n\nconst totalLikes    = enrichedPosts.reduce((s,p)=>s+(Number(p.likes)||0),0);\nconst totalComments = enrichedPosts.reduce((s,p)=>s+(Number(p.comments)||0),0);\nconst totalShares   = enrichedPosts.reduce((s,p)=>s+(Number(p.shares)||0),0);\nconst totalViews    = enrichedPosts.reduce((s,p)=>s+(Number(p.views)||0),0);\nconst totalEng = totalLikes + totalComments + totalShares;\n\nconst sovMap = {};\nenrichedPosts.forEach(p => { sovMap[p.plateform] = (sovMap[p.plateform]||0)+1; });\nconst sov = Object.entries(sovMap).map(([name,count]) => ({ name, count, pct: total?Number(((count/total)*100).toFixed(1)):0 }));\n\nconst sb = {};\nenrichedPosts.forEach(p => {\n  if(!sb[p.plateform]) sb[p.plateform]={pos:0,neg:0,neu:0};\n  if(p.sentiment==='positive') sb[p.plateform].pos++;\n  else if(p.sentiment==='negative') sb[p.plateform].neg++;\n  else sb[p.plateform].neu++;\n});\n\nconst trend = {};\nenrichedPosts.forEach(p => {\n  const d = new Date(p.timestamps);\n  if(isNaN(d)) return;\n  const key = d.toLocaleDateString('en-US',{month:'short',year:'numeric'});\n  if(!trend[p.plateform]) trend[p.plateform]={};\n  trend[p.plateform][key] = (trend[p.plateform][key]||0)+1;\n});\n\nconst uniqueUsers = new Set(enrichedPosts.map(p=>p.handle)).size;\n\nconst dashboard = {\n  brand: brandName,\n  run_date: new Date().toISOString().split('T')[0],\n  totals: {\n    total, pos, neg, neu,\n    posPct: pct(pos), negPct: pct(neg), neuPct: pct(neu),\n    unique: uniqueUsers\n  },\n  sentiment_score: resp.sentiment_score ?? 50,\n  market_overview: resp.summary || '',\n  platform_sov: sov,\n  sentiment_breakdown: sb,\n  trend,\n  intents: resp.intents || [],\n  keywords: resp.keywords || [],\n  cross_brands: resp.cross_brands || [],\n  handles: resp.handles || [],\n  products: resp.products || [],\n  product_sentiment: resp.product_sentiment || [],\n  locations: resp.locations || [],\n  posts: enrichedPosts\n};\n\nconst flatRow = {\n  brand: brandName,\n  run_date: dashboard.run_date,\n  run_id: (($('Execute Workflow Trigger').first().json)||{}).run_id || '',\n  status: total > 0 ? 'done' : 'error',\n  sentiment_score: dashboard.sentiment_score,\n  sentiment_category: pos>=neg && pos>=neu ? 'Positive' : (neg>=pos && neg>=neu ? 'Negative' : 'Neutral'),\n  market_overview: dashboard.market_overview,\n  keyword: (resp.keywords||[]).map(k=>k.name).slice(0,8).join(', '),\n  total_posts: total,\n  total_likes: totalLikes,\n  total_comments: totalComments,\n  total_shares: totalShares,\n  total_views: totalViews,\n  total_engagement: totalEng,\n  average_engagement: total>0 ? (totalEng/total).toFixed(2) : '0',\n  positive: pos, negative: neg, neutral: neu,\n  unique_users: uniqueUsers,\n  dashboard_json: ''\n};\n\nconst compactPosts = enrichedPosts.map(p => ({\n  brand: p.brand, handle: p.handle, plateform: p.plateform,\n  post_url: p.post_url,\n  post_text: String(p.post_text || '').substring(0, 200),\n  likes: p.likes, comments: p.comments, shares: p.shares, views: p.views,\n  engagement: p.engagement, eng_rate: p.eng_rate,\n  est_reach: p.est_reach, est_impressions: p.est_impressions,\n  display_date: p.display_date, timestamps: p.timestamps,\n  name: p.name, color: p.color,\n  sentiment: p.sentiment, intent: p.intent\n}));\nconst compactDashboard = { ...dashboard, posts: compactPosts };\nlet djson = JSON.stringify(compactDashboard);\nif (djson.length > 49000) {\n  djson = JSON.stringify({ ...compactDashboard, posts: [], _note: 'posts omitted: exceeded cell size' });\n}\nflatRow.dashboard_json = djson;\n\n// FIX #4: do NOT emit _dashboard to the sheet (it would bloat / overflow the cell)\nreturn [{ json: flatRow }];"
+      },
+      "id": "5f397c60-2566-4505-90cc-679cb07fe5ea",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3184,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4",
+          "mode": "list",
+          "cachedResultName": "AI automaiton",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 869481601,
+          "mode": "list",
+          "cachedResultName": "AI_Insights",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZIR6LbydR_JZR-o06ifp37GeYaOr6hu0gaibQ2C6lO4/edit#gid=869481601"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "run_id",
+            "brand"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "7f9001ab-1ce3-4c67-85e3-fdae00d1692c",
+      "name": "Write AI Insights",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [
+        3424,
+        1104
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "pKsnRZHoHeIn01s5",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "a24c18fe-eeed-4058-8895-fdec839c12c1",
+      "name": "Wait Loop",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        3664,
+        1104
+      ],
+      "webhookId": "wait-loop-back"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Init Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Init Run": {
+      "main": [
+        [
+          {
+            "node": "Write Queued Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Queued Rows": {
+      "main": [
+        [
+          {
+            "node": "Build Worker Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Worker Input": {
+      "main": [
+        [
+          {
+            "node": "Start Worker (fire & forget)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Worker (fire & forget)": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Read Run Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Run Rows": {
+      "main": [
+        [
+          {
+            "node": "Build Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Status": {
+      "main": [
+        [
+          {
+            "node": "Respond1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Brand List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Brand List": {
+      "main": [
+        [
+          {
+            "node": "Filter Requested Brands",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Requested Brands": {
+      "main": [
+        [
+          {
+            "node": "Clean Handles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Handles": {
+      "main": [
+        [
+          {
+            "node": "Loop Each Brand",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Each Brand": {
+      "main": [
+        [],
+        [
+          {
+            "node": "LinkedIn Scraper",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Instagram Scraper",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "YouTube Scraper",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Facebook Scraper",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "X Twitter Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Scraper": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Tag": {
+      "main": [
+        [
+          {
+            "node": "Merge All Platforms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram Scraper": {
+      "main": [
+        [
+          {
+            "node": "Instagram Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Instagram Tag": {
+      "main": [
+        [
+          {
+            "node": "Merge All Platforms",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "YouTube Scraper": {
+      "main": [
+        [
+          {
+            "node": "YouTube Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube Tag": {
+      "main": [
+        [
+          {
+            "node": "Merge All Platforms",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Facebook Scraper": {
+      "main": [
+        [
+          {
+            "node": "Facebook Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Tag": {
+      "main": [
+        [
+          {
+            "node": "Merge All Platforms",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "X Twitter Scraper": {
+      "main": [
+        [
+          {
+            "node": "Twitter Tag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twitter Tag": {
+      "main": [
+        [
+          {
+            "node": "Merge All Platforms",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Merge All Platforms": {
+      "main": [
+        [
+          {
+            "node": "Normalise Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalise Fields": {
+      "main": [
+        [
+          {
+            "node": "Write Raw Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Raw Data": {
+      "main": [
+        [
+          {
+            "node": "Aggregate By Brand",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate By Brand": {
+      "main": [
+        [
+          {
+            "node": "Build AI Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Prompt": {
+      "main": [
+        [
+          {
+            "node": "NVIDIA NIM Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NVIDIA NIM Analysis": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Write AI Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write AI Insights": {
+      "main": [
+        [
+          {
+            "node": "Wait Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Loop": {
+      "main": [
+        [
+          {
+            "node": "Loop Each Brand",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

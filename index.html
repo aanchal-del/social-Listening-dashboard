@@ -3,18 +3,23 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Contextual Pulse — Re-Aline</title>
+<title>Infectious Analyser — AI Social Intelligence</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Excel export (SheetJS) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- Optional deploy-time config: drop a config.js setting window.N8N_BASE_URL (see config.example.js).
+     On Vercel you can generate it from an env var at build. Safe to 404 if absent. -->
+<script src="config.js" onerror="this.remove()"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f6fa;color:#222;font-size:13px}
 /* ── TOPBAR ── */
 .topbar{background:#fff;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 20px;height:52px;gap:20px;position:sticky;top:0;z-index:300}
-.logo{font-weight:800;font-size:15px;color:#4b52d4;white-space:nowrap}
+.logo{font-weight:800;font-size:15px;color:#e0211b;white-space:nowrap}
 .brand-block{display:flex;flex-direction:column;gap:1px}
 .brand-block label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.4px}
 .brand-select-wrap{display:flex;align-items:center;gap:6px}
-.brand-dot{width:8px;height:8px;border-radius:50%;background:#4b52d4}
+.brand-dot{width:8px;height:8px;border-radius:50%;background:#e0211b}
 .brand-select-wrap select{border:none;font-size:12px;font-weight:600;color:#222;outline:none;background:transparent;cursor:pointer}
 .duration-block{margin-left:auto;text-align:right}
 .duration-block label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.4px;display:block}
@@ -30,8 +35,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* ── MAIN TABS ── */
 .main-tabs{background:#fff;border-bottom:1px solid #e8e8e8;padding:0 20px;display:flex;gap:4px}
 .main-tab{padding:12px 16px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:#666;border-bottom:3px solid transparent;transition:all .15s}
-.main-tab:hover{color:#4b52d4}
-.main-tab.active{color:#4b52d4;border-bottom-color:#4b52d4;font-weight:600}
+.main-tab:hover{color:#e0211b}
+.main-tab.active{color:#e0211b;border-bottom-color:#e0211b;font-weight:600}
 /* ── PAGE ── */
 .page{display:none;padding:16px 20px}
 .page.active{display:block}
@@ -40,12 +45,45 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sec-header-title{font-weight:700;font-size:13px;color:#333}
 .sec-header-actions{display:flex;gap:8px;align-items:center}
 .icon-btn{background:none;border:1px solid #d0d4e0;border-radius:4px;padding:3px 6px;cursor:pointer;font-size:11px;color:#666}
-.icon-btn:hover{border-color:#4b52d4;color:#4b52d4}
+.icon-btn:hover{border-color:#e0211b;color:#e0211b}
 /* ── SUBSECTION ── */
 .sub-section{background:#fff;border:1px solid #e8e8e8;border-top:none;padding:14px 16px}
 .sub-title{font-weight:600;font-size:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 .export-btn{background:#fff;border:1px solid #52c41a;color:#52c41a;padding:3px 10px;border-radius:4px;font-size:11px;cursor:pointer;font-weight:600}
 .export-btn:hover{background:#f6ffed}
+.export-btn:disabled{opacity:.5;cursor:not-allowed}
+/* ── ANALYZE PANEL ── */
+.analyze-panel{background:#fff;border:1px solid #e8e8e8;border-radius:8px;margin:0 20px 16px;padding:16px 18px}
+.analyze-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.analyze-title{font-size:14px;font-weight:700;color:#222}
+.analyze-title small{font-weight:500;color:#888;font-size:11px;margin-left:8px}
+.brand-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.brand-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #d9d9e3;background:#fafaff;border-radius:16px;padding:5px 12px;font-size:12px;font-weight:600;color:#444;cursor:pointer;user-select:none}
+.brand-chip input{cursor:pointer;margin:0}
+.brand-chip.checked{border-color:#e0211b;background:#fdecec;color:#8f1410}
+.brand-chip.empty{color:#999;font-weight:500;cursor:default;border-style:dashed}
+.analyze-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.force-wrap{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#555;cursor:pointer;user-select:none}
+.analyze-btn{background:#e0211b;color:#fff;border:none;border-radius:6px;padding:8px 20px;font-size:13px;font-weight:700;cursor:pointer}
+.analyze-btn:hover{background:#b5160f}
+.analyze-btn:disabled{background:#c2c4e0;cursor:not-allowed}
+.run-state{font-size:12px;color:#666;font-weight:600}
+.run-state.err{color:#c43a5b}
+.run-state.ok{color:#2e9e5b}
+.run-state.warn{color:#d4880a}
+/* per-brand progress */
+.prog-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.prog-row{display:inline-flex;align-items:center;gap:8px;border:1px solid #ececf2;border-radius:6px;padding:6px 10px;font-size:12px;background:#fcfcff}
+.prog-row .pb{font-weight:700;color:#333}
+.prog-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
+.prog-badge.queued{background:#fff7e6;color:#d4880a}
+.prog-badge.done{background:#f6ffed;color:#2e9e5b}
+.prog-badge.error{background:#fff1f0;color:#c43a5b}
+.prog-spin{width:11px;height:11px;border:2px solid #f0d9a8;border-top-color:#d4880a;border-radius:50%;animation:psp .7s linear infinite}
+@keyframes psp{to{transform:rotate(360deg)}}
+.prog-btn{border:none;background:#fff;border:1px solid #d9d9e3;border-radius:4px;font-size:10px;font-weight:600;padding:2px 7px;cursor:pointer;color:#555}
+.prog-btn:hover{background:#f5f5fa}
+.prog-btn.retry{border-color:#c43a5b;color:#c43a5b}
 /* ── VOICE CARDS ── */
 .voice-row{display:flex;gap:10px;margin-bottom:10px}
 .voice-card{flex:1;border:1px solid #e8e8e8;border-radius:6px;padding:12px 16px;background:#fff;cursor:default}
@@ -56,7 +94,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .voice-card.neu{background:#fffbe6;border-color:#ffe58f}
 .vc-label{font-size:11px;color:#888;margin-bottom:6px}
 .vc-val{font-size:26px;font-weight:800;line-height:1;display:flex;align-items:center;gap:8px}
-.vc-pct{font-size:12px;font-weight:500;color:#4b52d4;display:flex;align-items:center;gap:2px}
+.vc-pct{font-size:12px;font-weight:500;color:#e0211b;display:flex;align-items:center;gap:2px}
 .vc-pct svg{width:14px;height:14px}
 .unique-panel{flex:0 0 200px;border:1px solid #e8e8e8;border-radius:6px;padding:12px 16px;background:#fff}
 /* ── TWO COL ── */
@@ -122,7 +160,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .detail-view{display:none;position:fixed;inset:0;background:#f5f6fa;z-index:500;overflow-y:auto}
 .detail-view.open{display:block}
 .detail-topbar{background:#fff;border-bottom:1px solid #e8e8e8;padding:12px 20px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:10}
-.back-btn{background:none;border:none;cursor:pointer;font-size:13px;color:#4b52d4;font-weight:600;display:flex;align-items:center;gap:4px}
+.back-btn{background:none;border:none;cursor:pointer;font-size:13px;color:#e0211b;font-weight:600;display:flex;align-items:center;gap:4px}
 .back-btn:hover{text-decoration:underline}
 .detail-crumb{font-size:12px;color:#666}
 .detail-crumb b{color:#333}
@@ -135,16 +173,34 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ds-sub.neu{color:#faad14}
 .detail-tabs-bar{background:#fff;border-bottom:1px solid #e8e8e8;padding:0 20px;display:flex;gap:0}
 .detail-tab{padding:10px 14px;font-size:12px;cursor:pointer;border:none;background:none;color:#666;border-bottom:2px solid transparent}
-.detail-tab.active{color:#4b52d4;border-bottom-color:#4b52d4;font-weight:600}
+.detail-tab.active{color:#e0211b;border-bottom-color:#e0211b;font-weight:600}
 .detail-subtabs{padding:12px 20px 0;display:flex;gap:12px}
 .detail-subtab{padding:6px 0;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:#666}
-.detail-subtab.active{color:#4b52d4;border-bottom-color:#4b52d4;font-weight:600}
+.detail-subtab.active{color:#e0211b;border-bottom-color:#e0211b;font-weight:600}
 .detail-count-bar{padding:8px 20px;font-size:12px;color:#666;display:flex;align-items:center;justify-content:space-between;background:#fff;border-bottom:1px solid #f0f0f0}
 .detail-body{padding:16px 20px}
 /* ── POST CARDS ── */
 .posts-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.det-chip{display:inline-block;border:1px solid #d9d9e3;border-radius:14px;padding:3px 12px;font-size:11px;font-weight:600;color:#666;cursor:pointer;margin-right:6px}
+.det-chip:hover{border-color:#e0211b;color:#e0211b}
+.det-chip.active{background:#e0211b;color:#fff;border-color:#e0211b}
+/* ── TOP SECTION NAV (Phase 0) ── */
+.section-nav{background:#fff;border-bottom:1px solid #e8e8e8;display:flex;gap:2px;padding:0 20px;position:sticky;top:52px;z-index:250;overflow-x:auto}
+.sec-nav-btn{padding:13px 20px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;color:#666;border-bottom:3px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.sec-nav-btn:hover{color:#e0211b}
+.sec-nav-btn.active{color:#e0211b;border-bottom-color:#e0211b}
+.coming-wrap{padding:36px 20px;max-width:920px;margin:0 auto}
+.coming-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:28px;margin-bottom:16px}
+.coming-badge{display:inline-block;background:#fff7e6;color:#d4880a;font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;margin-bottom:10px}
+.coming-card h2{font-size:19px;margin-bottom:6px;color:#222}
+.coming-card p{color:#777;font-size:13px}
+.coming-card ul{margin:14px 0 0 18px;color:#555;font-size:13.5px;line-height:1.9}
+.board-form input{width:100%;border:1px solid #d0d4e0;border-radius:6px;padding:8px 10px;font-size:12px;margin-bottom:8px;outline:none}
+.board-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.board-tbl th{text-align:left;padding:8px;color:#888;font-size:10px;text-transform:uppercase;border-bottom:1px solid #eee}
+.board-tbl td{padding:8px;border-bottom:1px solid #f5f5f5;color:#444}
 .post-card{background:#fff;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden;transition:box-shadow .15s}
-.post-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);border-color:#4b52d4}
+.post-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1);border-color:#e0211b}
 .pc-header{padding:10px 12px;display:flex;align-items:flex-start;gap:8px}
 .pc-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
 .pc-info{flex:1;min-width:0}
@@ -152,18 +208,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pc-handle{font-size:11px;color:#888}
 .pc-date{font-size:10px;color:#aaa;white-space:nowrap;margin-left:auto}
 .pc-text{padding:0 12px;font-size:12px;color:#444;line-height:1.6;max-height:72px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical}
-.pc-readmore{padding:2px 12px 8px;font-size:11px;color:#4b52d4;cursor:pointer}
+.pc-readmore{padding:2px 12px 8px;font-size:11px;color:#e0211b;cursor:pointer}
 .pc-thumb{width:100%;height:120px;object-fit:cover;display:block;background:var(--thumb-bg,#f0f0f0)}
 .pc-stats{padding:8px 12px;display:flex;gap:10px;border-top:1px solid #f0f0f0}
 .pc-stat{display:flex;align-items:center;gap:3px;font-size:11px;color:#888}
 .pc-metrics{padding:8px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;border-top:1px solid #f0f0f0;background:#fafafa}
-.pc-metric-val{font-size:12px;font-weight:700;color:#4b52d4}
+.pc-metric-val{font-size:12px;font-weight:700;color:#e0211b}
 .pc-metric-label{font-size:9px;color:#aaa;text-transform:uppercase}
 /* ── DETAIL CONTENT TABS ── */
 .detail-section{display:none}
 .detail-section.active{display:block}
 /* ── WORD CLOUD DETAIL ── */
 .detail-wc{padding:20px;min-height:200px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+/* ── IN-DASHBOARD POST MODAL ── */
+.post-modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,22,40,.55);z-index:600;align-items:center;justify-content:center;padding:20px}
+.post-modal-overlay.open{display:flex}
+.post-modal-box{background:#fff;border-radius:10px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;padding:22px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.post-modal-close{position:absolute;top:10px;right:12px;border:none;background:none;font-size:24px;line-height:1;color:#999;cursor:pointer}
+.post-modal-close:hover{color:#333}
+.pm-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pm-sent{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;text-transform:capitalize}
+.pm-meta{font-size:11px;color:#888;margin-bottom:12px}
+.pm-thumb{height:200px;border-radius:8px;background-size:cover;background-position:center;margin-bottom:12px;background-color:#eee}
+.pm-text{font-size:14px;line-height:1.6;color:#222;white-space:pre-wrap;margin-bottom:14px}
+.pm-stats{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:#555;border-top:1px solid #f0f0f0;padding-top:12px}
+.pm-link{display:inline-block;margin-top:14px;font-size:12px;font-weight:600;color:#e0211b;text-decoration:none}
+.pm-link:hover{text-decoration:underline}
 /* ── SOURCE PIE ── */
 .source-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:10px}
 /* ── LOCATION TABLE ── */
@@ -178,7 +248,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .inf-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px;flex-shrink:0}
 .inf-name{font-weight:700;font-size:12px}
 .inf-handle{font-size:11px;color:#888}
-.inf-metric{font-size:11px;color:#4b52d4;font-weight:600;margin-top:2px}
+.inf-metric{font-size:11px;color:#e0211b;font-weight:600;margin-top:2px}
 /* ── CATEGORY CHART ── */
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:5px;height:5px}
@@ -187,11 +257,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 @media(max-width:900px){.two-col,.three-col,.posts-grid{grid-template-columns:1fr}}
 /* ── TOPBAR ACTIONS ── */
 .topbar-actions{display:flex;align-items:center;gap:8px;margin-left:16px}
-.refresh-btn{display:flex;align-items:center;gap:5px;background:#4b52d4;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
-.refresh-btn:hover{background:#3840c0}
+.refresh-btn{display:flex;align-items:center;gap:5px;background:#e0211b;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s}
+.refresh-btn:hover{background:#b5160f}
 .refresh-btn.loading svg{animation:spin .7s linear infinite}
 .settings-btn{background:#fff;border:1px solid #ddd;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:14px;color:#666;line-height:1}
-.settings-btn:hover{border-color:#4b52d4;color:#4b52d4}
+.settings-btn:hover{border-color:#e0211b;color:#e0211b}
 .live-dot{width:7px;height:7px;border-radius:50%;background:#52c41a;flex-shrink:0}
 .live-dot.offline{background:#ff4d4f}
 .live-dot.loading-dot{background:#faad14;animation:pulse .8s ease-in-out infinite}
@@ -205,12 +275,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .modal-sub{font-size:12px;color:#888;margin-bottom:20px}
 .modal-label{font-size:11px;font-weight:600;color:#555;margin-bottom:5px}
 .modal-input{width:100%;border:1px solid #d0d4e0;border-radius:6px;padding:9px 12px;font-size:12px;outline:none;transition:border .15s}
-.modal-input:focus{border-color:#4b52d4}
+.modal-input:focus{border-color:#e0211b}
 .modal-hint{font-size:11px;color:#aaa;margin-top:5px}
 .modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
 .modal-btn{border-radius:6px;padding:7px 18px;font-size:12px;font-weight:600;cursor:pointer;border:none}
-.modal-btn.primary{background:#4b52d4;color:#fff}
-.modal-btn.primary:hover{background:#3840c0}
+.modal-btn.primary{background:#e0211b;color:#fff}
+.modal-btn.primary:hover{background:#b5160f}
 .modal-btn.secondary{background:#f5f5f5;color:#555;border:1px solid #ddd}
 .modal-btn.secondary:hover{background:#eee}
 .modal-status{font-size:11px;padding:6px 10px;border-radius:5px;display:none;margin-top:10px}
@@ -219,18 +289,118 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* ── LOADING OVERLAY ── */
 .load-overlay{display:none;position:fixed;inset:0;background:rgba(255,255,255,.8);z-index:800;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .load-overlay.open{display:flex}
-.load-spinner{width:40px;height:40px;border:3px solid #e8eaf6;border-top-color:#4b52d4;border-radius:50%;animation:spin .7s linear infinite}
+.load-spinner{width:40px;height:40px;border:3px solid #e8eaf6;border-top-color:#e0211b;border-radius:50%;animation:spin .7s linear infinite}
 .load-text{font-size:13px;color:#666;font-weight:500}
 /* ── DATA STATUS BAR ── */
-.data-status{background:#f0f4ff;border-bottom:1px solid #dde3f5;padding:6px 20px;font-size:11px;color:#4b52d4;display:none;align-items:center;gap:8px}
+.data-status{background:#f0f4ff;border-bottom:1px solid #dde3f5;padding:6px 20px;font-size:11px;color:#e0211b;display:none;align-items:center;gap:8px}
 .data-status.show{display:flex}
+
+/* ════════════════════════════════════════════════════════════
+   PREMIUM DESIGN LAYER (enterprise polish — overrides above)
+   ════════════════════════════════════════════════════════════ */
+:root{
+  --brand:#e0211b;--brand-d:#b5160f;--brand-l:#fdecec;
+  --ink:#0f172a;--muted:#64748b;--line:#e9ecf3;--bg:#f6f7fb;--card:#ffffff;
+  --pos:#16a34a;--neg:#e11d48;--neu:#f59e0b;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.04),0 1px 3px rgba(15,23,42,.06);
+  --shadow-md:0 4px 16px rgba(15,23,42,.06),0 2px 6px rgba(15,23,42,.04);
+  --radius:12px;
+}
+body{background:var(--bg);color:var(--ink);font-feature-settings:'cv02','cv03','cv04';letter-spacing:-.1px}
+/* Topbar */
+.topbar{height:56px;box-shadow:var(--shadow-sm);border-bottom:1px solid var(--line)}
+.logo{font-size:16px;color:var(--brand);letter-spacing:-.4px}
+.brand-dot{background:var(--brand)}
+/* Section nav */
+.section-nav{box-shadow:var(--shadow-sm);top:56px}
+.sec-nav-btn{font-weight:600;letter-spacing:-.2px}
+.sec-nav-btn.active{color:var(--brand);border-bottom-color:var(--brand)}
+/* Tabs */
+.main-tab.active,.main-tab:hover{color:var(--brand)}
+.main-tab.active{border-bottom-color:var(--brand)}
+/* Panels / cards — soft elevation, consistent radius */
+.panel,.sub-section,.voice-card,.unique-panel,.intent-card,.post-card,.coming-card,.inf-card,.hero-shot{
+  border-radius:var(--radius)!important;border-color:var(--line)!important;box-shadow:var(--shadow-sm)}
+.panel{padding:16px 18px;transition:box-shadow .18s}
+.panel:hover{box-shadow:var(--shadow-md)}
+.panel-title{font-weight:700;font-size:13px;letter-spacing:-.2px;color:var(--ink);margin-bottom:14px}
+.sec-header{background:linear-gradient(180deg,#fbfcff,#f3f5fb);border-color:var(--line);border-radius:var(--radius) var(--radius) 0 0}
+.sec-header-title{font-weight:800;letter-spacing:-.3px}
+/* Voice cards */
+.voice-card{padding:14px 16px}
+.vc-val{font-size:28px;letter-spacing:-1px}
+.voice-card.clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.voice-card.pos{background:#f0fdf4;border-color:#bbf7d0!important}
+.voice-card.neg{background:#fff1f2;border-color:#fecdd3!important}
+.voice-card.neu{background:#fffbeb;border-color:#fde68a!important}
+/* Buttons */
+.btn,.modal-btn,.analyze-btn,.refresh-btn,.export-btn,.icon-btn{transition:all .15s;letter-spacing:-.2px}
+.modal-btn.primary,.analyze-btn{background:var(--brand);box-shadow:0 1px 2px rgba(79,70,229,.3)}
+.modal-btn.primary:hover,.analyze-btn:hover{background:var(--brand-d);transform:translateY(-1px)}
+.refresh-btn{background:var(--brand);border-radius:8px}
+.refresh-btn:hover{background:var(--brand-d)}
+.icon-btn:hover{border-color:var(--brand);color:var(--brand)}
+.det-chip.active{background:var(--brand);border-color:var(--brand)}
+/* Post cards */
+.post-card{box-shadow:var(--shadow-sm)}
+.post-card:hover{box-shadow:var(--shadow-md);border-color:var(--brand)!important}
+.pc-name{font-weight:700;letter-spacing:-.2px}
+.pc-metric-val{color:var(--brand)}
+/* Tables */
+.board-tbl th,.loc-table th{color:var(--muted);font-weight:700;letter-spacing:.3px}
+.board-tbl tr:hover td{background:#fafbff}
+/* Add-Brand modal pieces */
+.ab-toggle{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:8px;padding:9px 12px;font-size:12px;font-weight:600;color:#555;cursor:pointer;white-space:nowrap}
+.ab-toggle.on{border-color:var(--brand);background:var(--brand-l);color:var(--brand)}
+.chip-input{display:flex;gap:6px;border:1px solid var(--line);border-radius:8px;padding:4px 4px 4px 10px;align-items:center}
+.chip-input input{flex:1;border:none;outline:none;font-size:12px;padding:6px 0;background:none}
+.chip-add{border:none;background:var(--brand-l);color:var(--brand);border-radius:6px;width:30px;height:28px;font-size:16px;cursor:pointer;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{background:#fdecec;color:#b5160f;border-radius:12px;padding:3px 8px 3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.chip b{cursor:pointer;color:#7c83b8;font-weight:700}
+.plat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.plat-btn{border:1.5px solid var(--line);border-radius:8px;padding:9px;font-size:12px;font-weight:600;color:#555;cursor:pointer;text-align:center;background:#fff;transition:all .12s}
+.plat-btn.on{border-color:var(--brand);background:var(--brand-l);color:var(--brand)}
+.plat-btn.dim{opacity:.55}
+.hand-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hand-row{display:flex;align-items:center;gap:6px}
+.hand-row label{font-size:10px;color:#888;width:62px;text-transform:capitalize}
+.hand-row input{flex:1;border:1px solid var(--line);border-radius:6px;padding:7px 9px;font-size:11px;outline:none}
+@media(max-width:560px){.plat-grid{grid-template-columns:repeat(2,1fr)}.hand-grid{grid-template-columns:1fr}}
+/* Inputs */
+.modal-input,.board-form input{border-radius:8px;border-color:var(--line);transition:border .15s,box-shadow .15s}
+.modal-input:focus,.board-form input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-l)}
+/* Coming/empty states */
+.coming-card{box-shadow:var(--shadow-md)}
+.coming-badge{background:var(--brand-l);color:var(--brand)}
+/* Hero */
+.hero{background:linear-gradient(180deg,#fff, #fafbff)}
+.hero h1{font-size:16px;letter-spacing:-.3px}
+/* Hide the static "Saved Quick Filters" bar (placeholder, no function) */
+.qf{display:none!important}
+/* Motion: section entrance + reduced-motion guard */
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Scrollbars */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+/* Responsiveness */
+@media(max-width:1024px){.posts-grid{grid-template-columns:repeat(2,1fr)}.three-col{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){
+  .two-col,.three-col,.posts-grid,.inf-grid,.source-grid,.hero-shot .body{grid-template-columns:1fr!important}
+  .topbar{flex-wrap:wrap;height:auto;padding:8px 14px;gap:10px}
+  .duration-block{margin-left:0}
+  .main-tabs,.section-nav{overflow-x:auto}
+  #overview-cards{grid-template-columns:1fr 1fr!important}
+}
 </style>
 </head>
 <body>
 
 <!-- TOP BAR -->
 <header class="topbar">
-  <div class="logo">Re-Aline</div>
+  <div class="logo">Infectious Analyser</div>
   <div class="brand-block">
     <label>Brands</label>
     <div class="brand-select-wrap">
@@ -252,7 +422,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <svg id="refresh-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       Refresh
     </button>
-    <button class="settings-btn" onclick="openSettings()" title="Configure n8n webhook">⚙</button>
+    <button class="settings-btn" onclick="openSettings()" title="Configure backend connection">⚙</button>
   </div>
 </header>
 
@@ -264,30 +434,60 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <!-- LOADING OVERLAY -->
 <div class="load-overlay" id="load-overlay">
   <div class="load-spinner"></div>
-  <div class="load-text" id="load-text">Fetching data from n8n…</div>
+  <div class="load-text" id="load-text">Fetching data…</div>
 </div>
 
 <!-- SETTINGS MODAL -->
 <div class="modal-overlay" id="settings-modal">
   <div class="modal-box">
-    <div class="modal-title">n8n Webhook Configuration</div>
-    <div class="modal-sub">Enter the GET webhook URL from your n8n data workflow. The dashboard will call this on load and on Refresh.</div>
-    <div class="modal-label">Webhook URL</div>
-    <input class="modal-input" id="webhook-url-input" type="url" placeholder="https://your-n8n.com/webhook/social-analytics-data" />
-    <div class="modal-hint">Paste the URL from your n8n Webhook node (execution mode: Production)</div>
+    <div class="modal-title">Backend Connection</div>
+    <div class="modal-sub">The dashboard triggers an async analysis run and polls for results. Leave the URL blank when the page is served by its own backend (same origin). Set the brands you can analyse.</div>
+    <div class="modal-label">Backend Base URL (optional)</div>
+    <input class="modal-input" id="base-url-input" type="url" placeholder="leave blank if served by the backend" />
+    <div class="modal-hint">Base only — no <code>/webhook</code>. The app calls <code>{BASE}/webhook/analyze</code> and <code>{BASE}/webhook/status</code>. Blank = same origin.</div>
+    <div class="modal-label" style="margin-top:14px">Brands (one per line, must match the backend's Brand sheet)</div>
+    <textarea class="modal-input" id="brands-input" rows="4" placeholder="Ebco&#10;Hettich" style="resize:vertical;font-family:inherit"></textarea>
+    <div class="modal-hint">These appear in the Analyze picker. Edit any time.</div>
     <div class="modal-status" id="modal-status"></div>
     <div class="modal-actions">
       <button class="modal-btn secondary" onclick="closeSettings()">Cancel</button>
       <button class="modal-btn secondary" onclick="testWebhook()">Test Connection</button>
-      <button class="modal-btn primary" onclick="saveWebhook()">Save &amp; Load Data</button>
+      <button class="modal-btn primary" onclick="saveSettings()">Save</button>
     </div>
   </div>
 </div>
 
+<!-- ══ TOP SECTION NAV (Phase 0) ══ -->
+<nav class="section-nav">
+  <button class="sec-nav-btn active" data-sec="listen"  onclick="showSection('listen',this)">📡 Listen</button>
+  <button class="sec-nav-btn"        data-sec="analyze"  onclick="showSection('analyze',this)">📊 Analyze</button>
+  <button class="sec-nav-btn"        data-sec="publish"  onclick="showSection('publish',this)">✏️ Publish</button>
+  <button class="sec-nav-btn"        data-sec="engage"   onclick="showSection('engage',this)">💬 Engage</button>
+  <button class="sec-nav-btn"        data-sec="settings" onclick="showSection('settings',this)">⚙️ Settings</button>
+</nav>
+
+<!-- ══ LISTEN (the existing dashboard) ══ -->
+<div id="view-listen" class="app-view">
+
 <!-- HERO -->
 <div class="hero">
-  <h1>Contextual Pulse: Powered By AI</h1>
+  <h1>Infectious Analyser — AI Social Intelligence</h1>
   <p>This AI-driven dashboard analyzes key context and sentiment around the brand, offering deep insights into user sentiment, opinions, intent and feedback.</p>
+</div>
+
+<!-- ANALYZE PANEL (async trigger + poll) -->
+<div class="analyze-panel" id="analyze-panel">
+  <div class="analyze-head">
+    <div class="analyze-title">Run Analysis <small id="run-source">select brands and click Analyze</small></div>
+    <div class="run-state" id="run-state"></div>
+  </div>
+  <div class="brand-chips" id="brand-chips"><!-- populated from configured brand list --></div>
+  <div class="analyze-controls">
+    <button class="analyze-btn" id="analyze-btn" onclick="onAnalyzeClick()" disabled>Analyze</button>
+    <label class="force-wrap"><input type="checkbox" id="force-refresh"/> Force refresh (re-run even if analysed today)</label>
+    <button class="export-btn" id="download-all-btn" onclick="downloadAllExcel()" style="display:none">⬇ Download all (Excel)</button>
+  </div>
+  <div class="prog-grid" id="prog-grid"></div>
 </div>
 
 <!-- QUICK FILTERS -->
@@ -302,6 +502,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="main-tab active" onclick="showMainTab('cva',this)">Customer Voice Analysis</button>
   <button class="main-tab" onclick="showMainTab('kco',this)">Key Context &amp; Opinions</button>
   <button class="main-tab" onclick="showMainTab('ea',this)">Entity Analysis</button>
+  <button class="main-tab" onclick="showMainTab('news',this)">📰 News &amp; PR</button>
+  <button class="main-tab" onclick="showMainTab('crisis',this)">🚨 Crisis</button>
+  <button class="main-tab" onclick="showMainTab('trends',this)">📈 Trends</button>
+  <button class="main-tab" onclick="showMainTab('leads',this)">💡 Leads &amp; Ideas</button>
 </nav>
 
 <!-- ══════════════════════════════════════════
@@ -319,14 +523,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
   </div>
 
+  <!-- DATA OVERVIEW (always shows the full picture across all brands) -->
+  <div class="sub-section" style="border-radius:0 0 6px 6px">
+    <div class="sub-title">Data Overview <span style="font-weight:500;color:#888;font-size:11px">— everything currently in the dashboard</span></div>
+    <div id="overview-cards" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px"></div>
+    <div id="overview-table"></div>
+  </div>
+
   <!-- Customer Voice Breakdown -->
   <div class="sub-section">
     <div class="sub-title">
       Customer Voice Breakdown
-      <button class="export-btn">⊞ Export</button>
+      <button class="export-btn" onclick="exportCurrentView()">⊞ Export</button>
     </div>
     <div class="voice-row">
-      <div class="voice-card">
+      <div class="voice-card clickable" onclick="openDetail('all')" title="View all mentions">
         <div class="vc-label">Mention Count</div>
         <div class="vc-val" id="vc-total">480</div>
       </div>
@@ -393,7 +604,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="panel" style="margin-top:12px">
     <div class="panel-title">Overall Sentiment-wise Intent Around Breakdown
       <div style="display:flex;gap:6px;align-items:center">
-        <button class="intent-toggle active" data-idx="0" onclick="toggleIntentDataset(this)" style="background:#4b52d4;color:#fff;border:1px solid #4b52d4">Total</button>
+        <button class="intent-toggle active" data-idx="0" onclick="toggleIntentDataset(this)" style="background:#e0211b;color:#fff;border:1px solid #e0211b">Total</button>
         <button class="intent-toggle active" data-idx="1" onclick="toggleIntentDataset(this)" style="background:#52c41a;color:#fff;border:1px solid #52c41a">Positive</button>
         <button class="intent-toggle active" data-idx="2" onclick="toggleIntentDataset(this)" style="background:#ff4d4f;color:#fff;border:1px solid #ff4d4f">Negative</button>
         <button class="icon-btn">≡</button>
@@ -506,7 +717,181 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
   <div class="panel" style="margin-top:12px">
     <div class="panel-title">Sentiment Wise Mentioned Location <button class="icon-btn">≡</button></div>
-    <div class="chart-wrap" style="height:200px"><canvas id="chart-location"></canvas></div>
+    <div class="chart-wrap" id="loc-wrap" style="height:200px"><canvas id="chart-location"></canvas></div>
+    <div id="loc-empty" style="display:none;padding:24px;color:#aaa;font-size:12px;text-align:center">No location data available for this selection.</div>
+  </div>
+</div>
+
+<!-- ══ NEWS & PR ══ -->
+<div id="page-news" class="page">
+  <div class="sec-header" style="margin-top:0"><span class="sec-header-title">📰 News &amp; PR</span></div>
+  <div class="sub-section"><div style="font-size:12px;color:#666;margin-bottom:10px" id="news-sub">Latest news mentioning the brand.</div>
+    <div id="news-list"><div style="color:#aaa;font-size:12px">Loading…</div></div>
+  </div>
+</div>
+
+<!-- ══ CRISIS ══ -->
+<div id="page-crisis" class="page">
+  <div class="sec-header" style="margin-top:0"><span class="sec-header-title">🚨 Crisis Alerts</span></div>
+  <div class="sub-section"><div style="font-size:12px;color:#666;margin-bottom:10px">Spikes in negative sentiment that may need attention.</div>
+    <div id="crisis-list"></div>
+  </div>
+</div>
+
+<!-- ══ TRENDS ══ -->
+<div id="page-trends" class="page">
+  <div class="sec-header" style="margin-top:0"><span class="sec-header-title">📈 Trends</span></div>
+  <div class="panel" style="margin-top:12px"><div class="panel-title">Mention Volume &amp; Sentiment Over Time</div>
+    <div class="chart-wrap" style="height:260px"><canvas id="chart-trends-vol"></canvas></div>
+  </div>
+  <div class="panel" style="margin-top:12px"><div class="panel-title">Rising Topics</div>
+    <div id="trends-topics" class="word-cloud" style="min-height:120px"></div>
+  </div>
+</div>
+
+<!-- ══ LEADS & IDEAS ══ -->
+<div id="page-leads" class="page">
+  <div class="sec-header" style="margin-top:0"><span class="sec-header-title">💡 Leads &amp; Ideas</span></div>
+  <div class="two-col" style="margin-top:12px">
+    <div class="panel"><div class="panel-title">🎯 Leads <small style="color:#888;font-weight:500">— people asking / needing help</small></div>
+      <div id="leads-list" style="max-height:520px;overflow:auto"></div>
+    </div>
+    <div class="panel"><div class="panel-title">💡 Content Ideas <small style="color:#888;font-weight:500">— from what's resonating</small></div>
+      <div id="ideas-list"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /view-listen -->
+
+<!-- ══ ANALYZE (Phase 2–4) ══ -->
+<div id="view-analyze" class="app-view" style="display:none">
+  <div class="sec-header" style="margin:16px 20px 0;border-radius:6px"><span class="sec-header-title">📊 Analyze</span></div>
+  <nav class="main-tabs" style="margin-top:0">
+    <button class="main-tab active" onclick="showAnalyzeTab('bench',this)">⚖️ Benchmarking</button>
+    <button class="main-tab" onclick="showAnalyzeTab('pillar',this)">🏛 Pillar Health</button>
+    <button class="main-tab" onclick="showAnalyzeTab('perf',this)">🏆 Performance</button>
+    <button class="main-tab" onclick="showAnalyzeTab('anomaly',this)">📉 Anomaly</button>
+    <button class="main-tab" onclick="showAnalyzeTab('reports',this)">📑 Reports</button>
+  </nav>
+  <div style="padding:16px 20px">
+    <div id="atab-bench" class="apage">
+      <div class="panel"><div class="panel-title">Your Brand vs Competitors</div><div id="bench-table"></div></div>
+      <div class="panel" style="margin-top:12px"><div class="panel-title">Mentions &amp; Sentiment by Brand</div><div class="chart-wrap" style="height:280px"><canvas id="chart-bench"></canvas></div></div>
+    </div>
+    <div id="atab-pillar" class="apage" style="display:none">
+      <div class="panel"><div class="panel-title">🏛 Pillar Health <small style="color:#888;font-weight:500">— 5-axis brand-score breakdown (0–100)</small></div>
+        <div class="chart-wrap" style="height:380px"><canvas id="chart-pillar"></canvas></div>
+      </div>
+      <div id="pillar-cards" style="margin-top:12px"></div>
+    </div>
+    <div id="atab-perf" class="apage" style="display:none"><div id="perf-content"></div></div>
+    <div id="atab-anomaly" class="apage" style="display:none">
+      <div style="font-size:12px;color:#666;margin-bottom:10px">Statistical spikes (Z-score &gt; 2) in daily mention volume &amp; negativity.</div>
+      <div id="anomaly-content"></div>
+    </div>
+    <div id="atab-reports" class="apage" style="display:none">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="modal-btn primary" onclick="genReport('competitor')">⚖️ Competitor Report</button>
+        <button class="modal-btn secondary" onclick="genReport('audit')">🔍 Brand Audit</button>
+        <button class="modal-btn secondary" onclick="genReport('leadership')">📈 Leadership Summary</button>
+      </div>
+      <div id="reports-content"><div style="color:#aaa;font-size:12px">Pick a report above.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PUBLISH (Phase 6 — needs platform APIs) ══ -->
+<div id="view-publish" class="app-view" style="display:none">
+  <div class="coming-wrap">
+    <div class="coming-card">
+      <span class="coming-badge">Phase 6 · needs platform API approvals</span>
+      <h2>✏️ Publish</h2>
+      <p>Create and schedule content across accounts. Requires official Meta/X/LinkedIn/YouTube publishing APIs.</p>
+      <ul>
+        <li><b>Post Composer</b> + Best-Time suggestions</li>
+        <li><b>Content Calendar</b></li>
+        <li><b>Scheduler</b> &amp; <b>Repost</b></li>
+        <li><b>Drafts &amp; Approvals</b> workflow</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ENGAGE (Phase 6 — needs platform APIs) ══ -->
+<div id="view-engage" class="app-view" style="display:none">
+  <div class="coming-wrap">
+    <div class="coming-card">
+      <span class="coming-badge">Phase 6 · needs platform API approvals</span>
+      <h2>💬 Engage</h2>
+      <p>Respond to and manage conversations. Requires write access to each platform.</p>
+      <ul>
+        <li><b>Comment Reply</b> (AI-assisted)</li>
+        <li><b>Engagement Automations</b> (rules)</li>
+        <li>Like / reply workflows per account</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS → Boards (functional) ══ -->
+<div id="view-settings" class="app-view" style="display:none">
+  <div class="coming-wrap">
+    <div class="coming-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div><h2 style="margin-bottom:2px">🗂 Boards</h2><p>Brands you monitor (handles + keywords). The weekly auto-run fetches every board.</p></div>
+        <button class="modal-btn primary" onclick="openAddBrand()">+ Add New Brand</button>
+      </div>
+      <div id="boards-list" style="margin-top:16px"><div style="color:#aaa;font-size:12px">Loading…</div></div>
+    </div>
+    <div class="coming-card">
+      <span class="coming-badge">Phase 5</span>
+      <h2>👥 Accounts &amp; Privileges</h2>
+      <p>Coming later: user login, roles/permissions, multi-account workspaces, and tool switching.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD NEW BRAND MODAL ══ -->
+<div class="modal-overlay" id="addbrand-modal" onclick="if(event.target===this)closeAddBrand()">
+  <div class="modal-box" style="width:620px;max-height:90vh;overflow-y:auto">
+    <button class="post-modal-close" onclick="closeAddBrand()" style="position:absolute;top:14px;right:16px">×</button>
+    <div class="modal-title">Add New Brand</div>
+    <div class="modal-sub">Set up monitoring for a brand</div>
+
+    <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:14px">
+      <div style="flex:1"><div class="modal-label">Brand Name *</div><input class="modal-input" id="ab-name" placeholder="e.g., Godrej"/></div>
+      <label class="ab-toggle" id="ab-own-wrap" onclick="toggleOwn()"><input type="checkbox" id="ab-own"/> <span>Own Brand</span></label>
+    </div>
+
+    <div class="modal-label">Description (optional)</div>
+    <input class="modal-input" id="ab-desc" placeholder="Brief brand description" style="margin-bottom:14px"/>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div><div class="modal-label">Keywords *</div>
+        <div class="chip-input" id="ab-kw-box"><input id="ab-kw-in" placeholder="Add keyword…" onkeydown="if(event.key==='Enter'){addChip('kw');event.preventDefault()}"/><button type="button" class="chip-add" onclick="addChip('kw')">+</button></div>
+        <div class="chips" id="ab-kw-chips"></div>
+      </div>
+      <div><div class="modal-label">Exclusions (optional)</div>
+        <div class="chip-input" id="ab-ex-box"><input id="ab-ex-in" placeholder="Words to exclude…" onkeydown="if(event.key==='Enter'){addChip('ex');event.preventDefault()}"/><button type="button" class="chip-add" onclick="addChip('ex')">+</button></div>
+        <div class="chips" id="ab-ex-chips"></div>
+      </div>
+    </div>
+
+    <div class="modal-label">Platforms</div>
+    <div class="plat-grid" id="ab-plats"></div>
+
+    <div class="modal-label" style="margin-top:14px">Handles (optional)</div>
+    <div id="ab-handles" class="hand-grid"></div>
+
+    <div class="modal-actions" style="margin-top:18px;justify-content:space-between;align-items:center">
+      <span id="ab-platcount" style="font-size:12px;color:#888"></span>
+      <div style="display:flex;gap:8px">
+        <button class="modal-btn secondary" onclick="closeAddBrand()">Cancel</button>
+        <button class="modal-btn primary" id="ab-submit" onclick="submitAddBrand()">Create Brand</button>
+      </div>
+    </div>
+    <div id="ab-status" style="font-size:11px;margin-top:8px;text-align:right"></div>
   </div>
 </div>
 
@@ -578,6 +963,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </table>
     </div>
 
+  </div>
+</div>
+
+<!-- IN-DASHBOARD POST READER MODAL -->
+<div class="post-modal-overlay" id="post-modal" onclick="closePostModal(event)">
+  <div class="post-modal-box">
+    <button class="post-modal-close" id="post-modal-close" onclick="closePostModal(event)">×</button>
+    <div id="post-modal-body"></div>
   </div>
 </div>
 
@@ -673,7 +1066,7 @@ const SENT_BREAKDOWN = {
 });
 
 const KEYWORDS = [
-  {name:'Storage Solutions',   count:139, pct:21.8, nss:8.2,  color:'#4b52d4'},
+  {name:'Storage Solutions',   count:139, pct:21.8, nss:8.2,  color:'#e0211b'},
   {name:'Furniture Design',    count:114, pct:17.9, nss:6.5,  color:'#6b73e4'},
   {name:'Smart Living',        count:104, pct:16.3, nss:7.8,  color:'#7b83e8'},
   {name:'Wardrobe',            count:50,  pct:7.8,  nss:5.2,  color:'#8b93ec'},
@@ -689,20 +1082,20 @@ const KEYWORDS = [
 ];
 
 const WC_BRANDS = [
-  {t:'Hettich',s:72,c:'#4b52d4'},{t:'Hafele',s:64,c:'#7b3ec8'},{t:'IKEA',s:52,c:'#c43a5b'},
+  {t:'Hettich',s:72,c:'#e0211b'},{t:'Hafele',s:64,c:'#7b3ec8'},{t:'IKEA',s:52,c:'#c43a5b'},
   {t:'Godrej Interio',s:44,c:'#2e9e5b'},{t:'Blum',s:40,c:'#d4880a'},{t:'Dorma',s:36,c:'#0a6ebf'},
   {t:'Feather Lite',s:30,c:'#8e44ad'},{t:'Merino Laminates',s:26,c:'#16a085'},{t:'Centuryply',s:22,c:'#c0392b'},
   {t:'Greenply',s:20,c:'#27ae60'},{t:'Architect India',s:18,c:'#2980b9'},{t:'Bosch',s:16,c:'#d35400'},
   {t:'Asian Paints',s:14,c:'#8e44ad'},{t:'Pidilite',s:12,c:'#1abc9c'},{t:'Sleek Kitchens',s:10,c:'#e74c3c'},
 ];
 const WC_HANDLES = [
-  {t:'@hettich_india',s:72,c:'#4b52d4'},{t:'@hafele_india',s:60,c:'#7b3ec8'},{t:'@ebcosolutions',s:56,c:'#c43a5b'},
+  {t:'@hettich_india',s:72,c:'#e0211b'},{t:'@hafele_india',s:60,c:'#7b3ec8'},{t:'@ebcosolutions',s:56,c:'#c43a5b'},
   {t:'@interiordesign_india',s:44,c:'#2e9e5b'},{t:'@architectindia',s:38,c:'#d4880a'},{t:'@homestyle_in',s:34,c:'#0a6ebf'},
   {t:'@moderndecor',s:28,c:'#8e44ad'},{t:'@smartliving_in',s:24,c:'#16a085'},{t:'@kitchendesigns',s:20,c:'#c0392b'},
   {t:'@furnitureindia',s:18,c:'#27ae60'},{t:'@wardrobegoals',s:16,c:'#2980b9'},{t:'@storagepro',s:14,c:'#e67e22'},
 ];
 const WC_PRODUCTS = [
-  {t:'Coat Hanger System',s:72,c:'#4b52d4'},{t:'Shoe Rack',s:64,c:'#eb7ea8'},{t:'Cupboard Pullout',s:58,c:'#5b8dee'},
+  {t:'Coat Hanger System',s:72,c:'#e0211b'},{t:'Shoe Rack',s:64,c:'#eb7ea8'},{t:'Cupboard Pullout',s:58,c:'#5b8dee'},
   {t:'Smart Light Sensor',s:50,c:'#f16060'},{t:'Wardrobe Lift',s:44,c:'#5acce6'},{t:'Kitchen Pullout',s:38,c:'#52c41a'},
   {t:'Pivot Mirror',s:32,c:'#faad14'},{t:'Soft Close Hinges',s:28,c:'#722ed1'},{t:'Drawer Slides',s:24,c:'#eb2f96'},
   {t:'Cabinet Handles',s:20,c:'#13c2c2'},{t:'Magic Corner',s:18,c:'#fa8c16'},{t:'Tandem Box',s:14,c:'#1890ff'},
@@ -831,7 +1224,9 @@ const ALL_POSTS = [
 let charts = {};
 let currentBrand = 'all';
 let currentSentiment = 'positive';
+let currentIntent = null;
 let detailCatChart = null, sourceChart = null;
+let DETAIL_POSTS = []; // posts currently shown in the detail view (for the post modal)
 
 // ══════════════════════════════════════════════════════
 // INIT
@@ -845,7 +1240,40 @@ function updateBrand(){
   renderAll();
 }
 
+// Key-context keyword builder with REAL per-keyword sentiment (used by treemap, bubble,
+// and the two opinion networks). Counts mentions-containing-word and its pos/neg split.
+const KW_STOP=new Set((
+  'this that with from your you our have has had not but they them his her she him are can will just get got out very more most some what when where which who how why into over there their were was the and for you about https http com www been then than will would should could '+
+  'nice good great love amazing best super awesome beautiful excellent wonderful thanks thank please wow cool like want need also really very much many lovely fantastic perfect happy congratulations congrats keep going done well sir mam madam '+
+  'video watch share subscribe channel link bio comment follow check '+
+  'every through years year today together built being where there here that those these '+
+  'ebco hettich hafele häfele fele india indian'
+).split(/\s+/).filter(Boolean));
+const KW_COLORS2=['#5c63d4','#7b3ec8','#2e9e5b','#d4880a','#c43a5b','#0a6ebf','#e74c3c','#16a085','#8e44ad','#2980b9','#e67e22','#27ae60','#e91e63','#ff5722','#795548'];
+function computeKeywords(feed, limit){
+  const cnt={}, sent={};
+  const add=(w,p)=>{ cnt[w]=(cnt[w]||0)+1; if(!sent[w])sent[w]={pos:0,neg:0,neu:0}; if(p.sentiment==='positive')sent[w].pos++; else if(p.sentiment==='negative')sent[w].neg++; else sent[w].neu++; };
+  feed.forEach(p=>{
+    const toks=String(p.text||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>=4&&!KW_STOP.has(w)&&!/^\d+$/.test(w));
+    new Set(toks).forEach(w=>add(w,p));                                   // single words
+    const bi=new Set(); for(let i=0;i<toks.length-1;i++) bi.add(toks[i]+' '+toks[i+1]);
+    bi.forEach(w=>add(w,p));                                              // 2-word phrases
+  });
+  // Keep phrases only if they recur (≥2) to cut noise; keep all single words.
+  const top=Object.entries(cnt)
+    .filter(([w,c])=> w.includes(' ') ? c>=2 : c>=1)
+    .sort((a,b)=>b[1]-a[1]).slice(0, limit||30);
+  return top.map(([name,count],i)=>{
+    const s=sent[name]||{pos:0,neg:0,neu:0}; const tot=s.pos+s.neg+s.neu||1;
+    return {name,count,pct:+(count/(feed.length||1)*100).toFixed(1),nss:+(((s.pos-s.neg)/tot)*10).toFixed(1),pos:s.pos,neg:s.neg,neu:s.neu,color:KW_COLORS2[i%KW_COLORS2.length]};
+  });
+}
 function renderAll(){
+  renderOverview();
+  // Rebuild key-context keywords from ALL content (own posts + mentions) for the selected
+  // brand — own-post captions are rich, so this yields far more meaningful key context.
+  const kwFeed=ALL_POSTS.filter(p=> currentBrand==='all'||p.brand===currentBrand);
+  KEYWORDS.length=0; computeKeywords(kwFeed, 45).forEach(k=>KEYWORDS.push(k));
   renderVoiceCards();
   renderSOV();
   renderTrend();
@@ -864,16 +1292,44 @@ function renderAll(){
 // ══════════════════════════════════════════════════════
 // VOICE CARDS
 // ══════════════════════════════════════════════════════
+// Always-on summary of everything loaded (independent of the selected brand).
+function renderOverview(){
+  const el=document.getElementById('overview-cards'); if(!el) return;
+  const ment=ALL_POSTS.filter(p=>p.type!=='post');
+  const own=ALL_POSTS.filter(p=>p.type==='post');
+  const brandsSet=[...new Set(ALL_POSTS.map(p=>p.brand))].filter(Boolean);
+  const card=(label,val,clr)=>`<div style="border:1px solid #e8e8e8;border-radius:6px;padding:12px 14px;background:#fff"><div style="font-size:11px;color:#888">${label}</div><div style="font-size:24px;font-weight:800;color:${clr||'#222'}">${val}</div></div>`;
+  el.innerHTML =
+    card('Total items', ALL_POSTS.length) +
+    card('Mentions &amp; comments', ment.length, '#e0211b') +
+    card('Brand’s own posts', own.length, '#13c2c2') +
+    card('Brands tracked', brandsSet.length, '#722ed1');
+  // per-brand table
+  const rows=brandsSet.map(b=>{
+    const bm=ment.filter(p=>p.brand===b).length, bp=own.filter(p=>p.brand===b).length;
+    return `<tr><td style="padding:6px 10px;font-weight:600">${b}</td><td style="padding:6px 10px">${bp}</td><td style="padding:6px 10px;color:#e0211b;font-weight:600">${bm}</td><td style="padding:6px 10px;font-weight:700">${bp+bm}</td></tr>`;
+  }).join('');
+  document.getElementById('overview-table').innerHTML = brandsSet.length
+    ? `<table style="width:100%;border-collapse:collapse;font-size:12px">
+         <thead><tr style="color:#888;font-size:10px;text-transform:uppercase">
+           <th style="text-align:left;padding:6px 10px">Brand</th><th style="text-align:left;padding:6px 10px">Own posts</th><th style="text-align:left;padding:6px 10px">Mentions</th><th style="text-align:left;padding:6px 10px">Total</th></tr></thead>
+         <tbody>${rows}</tbody></table>`
+    : '<div style="color:#aaa;font-size:12px;padding:8px">No data loaded yet.</div>';
+}
+function countTo(set, target, dur){
+  target=Number(target)||0; const s=performance.now(); dur=dur||550;
+  (function step(t){ const p=Math.min(1,(t-s)/dur); set(Math.round(target*(1-Math.pow(1-p,3)))); if(p<1)requestAnimationFrame(step); })(s);
+}
 function renderVoiceCards(){
   const d = BRAND_DATA[currentBrand] || BRAND_DATA.all;
-  document.getElementById('vc-total').textContent = d.total;
-  document.getElementById('vc-pos').childNodes[0].textContent = d.pos + ' ';
+  countTo(v=>document.getElementById('vc-total').textContent=v, d.total);
+  countTo(v=>document.getElementById('vc-pos').childNodes[0].textContent=v+' ', d.pos);
   document.getElementById('vc-pos-pct').textContent = d.posPct + ' %';
-  document.getElementById('vc-neg').childNodes[0].textContent = d.neg + ' ';
+  countTo(v=>document.getElementById('vc-neg').childNodes[0].textContent=v+' ', d.neg);
   document.getElementById('vc-neg-pct').textContent = d.negPct + ' %';
-  document.getElementById('vc-neu').childNodes[0].textContent = d.neu + ' ';
+  countTo(v=>document.getElementById('vc-neu').childNodes[0].textContent=v+' ', d.neu);
   document.getElementById('vc-neu-pct').textContent = d.neuPct + ' %';
-  document.getElementById('vc-unique').textContent = d.unique;
+  countTo(v=>document.getElementById('vc-unique').textContent=v, d.unique);
 }
 
 // ══════════════════════════════════════════════════════
@@ -936,7 +1392,7 @@ function renderTrend(){
 const INTENT_DATA = {
   all:[
     {name:'Appreciation',  icon:'👍', color:'#52c41a', total:128, pos:112, neg:10, neu:6},
-    {name:'Product Inquiry',icon:'🔍',color:'#4b52d4', total:76,  pos:38,  neg:20, neu:18},
+    {name:'Product Inquiry',icon:'🔍',color:'#e0211b', total:76,  pos:38,  neg:20, neu:18},
     {name:'General Discussion',icon:'💬',color:'#1890ff',total:89,pos:44,neg:25,neu:20},
     {name:'Complaint',     icon:'⚠️', color:'#ff4d4f', total:67,  pos:8,   neg:52, neu:7},
     {name:'Feedback',      icon:'📝', color:'#faad14', total:54,  pos:28,  neg:16, neu:10},
@@ -946,7 +1402,7 @@ const INTENT_DATA = {
   ],
   Ebco:[
     {name:'Appreciation',  icon:'👍', color:'#52c41a', total:28, pos:22, neg:3, neu:3},
-    {name:'Product Inquiry',icon:'🔍',color:'#4b52d4', total:18, pos:12, neg:4, neu:2},
+    {name:'Product Inquiry',icon:'🔍',color:'#e0211b', total:18, pos:12, neg:4, neu:2},
     {name:'General Discussion',icon:'💬',color:'#1890ff',total:22,pos:14,neg:5,neu:3},
     {name:'Complaint',     icon:'⚠️', color:'#ff4d4f', total:12, pos:2,  neg:9, neu:1},
     {name:'Feedback',      icon:'📝', color:'#faad14', total:12, pos:6,  neg:4, neu:2},
@@ -956,7 +1412,7 @@ const INTENT_DATA = {
   ],
   Hettich:[
     {name:'Appreciation',  icon:'👍', color:'#52c41a', total:52, pos:44, neg:5,  neu:3},
-    {name:'Product Inquiry',icon:'🔍',color:'#4b52d4', total:30, pos:14, neg:9,  neu:7},
+    {name:'Product Inquiry',icon:'🔍',color:'#e0211b', total:30, pos:14, neg:9,  neu:7},
     {name:'General Discussion',icon:'💬',color:'#1890ff',total:38,pos:18,neg:12,neu:8},
     {name:'Complaint',     icon:'⚠️', color:'#ff4d4f', total:28, pos:3,  neg:21, neu:4},
     {name:'Feedback',      icon:'📝', color:'#faad14', total:22, pos:12, neg:6,  neu:4},
@@ -966,7 +1422,7 @@ const INTENT_DATA = {
   ],
   Hafele:[
     {name:'Appreciation',  icon:'👍', color:'#52c41a', total:48, pos:46, neg:2,  neu:0},
-    {name:'Product Inquiry',icon:'🔍',color:'#4b52d4', total:28, pos:12, neg:7,  neu:9},
+    {name:'Product Inquiry',icon:'🔍',color:'#e0211b', total:28, pos:12, neg:7,  neu:9},
     {name:'General Discussion',icon:'💬',color:'#1890ff',total:29,pos:12,neg:8, neu:9},
     {name:'Complaint',     icon:'⚠️', color:'#ff4d4f', total:27, pos:3,  neg:22, neu:2},
     {name:'Feedback',      icon:'📝', color:'#faad14', total:20, pos:10, neg:6,  neu:4},
@@ -985,7 +1441,7 @@ function renderIntentBreakdown(){
     data:{
       labels,
       datasets:[
-        {label:'Total',    data:data.map(d=>d.total), backgroundColor:'#4b52d4cc', borderRadius:3},
+        {label:'Total',    data:data.map(d=>d.total), backgroundColor:'#2563ebcc', borderRadius:3},
         {label:'Positive', data:data.map(d=>d.pos),   backgroundColor:'#52c41acc', borderRadius:3},
         {label:'Negative', data:data.map(d=>d.neg),   backgroundColor:'#ff4d4fcc', borderRadius:3},
       ]
@@ -1027,7 +1483,7 @@ function renderContextualIntent(){
     const posPct = d.total ? Math.round(d.pos/d.total*100) : 0;
     const negPct = d.total ? Math.round(d.neg/d.total*100) : 0;
     const neuPct = 100 - posPct - negPct;
-    return `<div class="intent-card">
+    return `<div class="intent-card clickable" style="cursor:pointer" onclick="openDetail('all', '${String(d.name).replace(/'/g,"\\'")}')" title="Click to see all ${d.name} mentions">
       <div style="display:flex;align-items:center;gap:8px">
         <div class="ic-icon" style="background:${d.color}22">${d.icon}</div>
         <div class="ic-name">${d.name}</div>
@@ -1093,13 +1549,20 @@ const CVA_NODES = [
   {label:'Opportunity',  pos:75, neg:15, neu:10, x:14, y:55, size:40,  c:'#1890ff'},
 ];
 
+const NODE_POS=[[38,30],[62,52],[24,60],[54,28],[74,34],[18,42],[80,62],[42,72],[64,72],[30,48]];
 function renderNetworkCVA(){
   const el = document.getElementById('network-cva');
-  el.innerHTML = CVA_NODES.map(n=>`
-    <div class="node" style="left:${n.x}%;top:${n.y}%;width:${n.size}px;height:${n.size}px;background:${n.c}cc;transform:translate(-50%,-50%);border:3px solid ${n.c}">
-      <div class="node-label" style="font-size:${n.size>70?11:9}px">${n.label}<br><span style="font-size:9px;opacity:.8">${Math.round(n.pos+n.neg+n.neu)}</span></div>
-    </div>
-  `).join('');
+  // Word-cloud of ALL key-context themes — sized by frequency, coloured by sentiment, clickable.
+  const data=KEYWORDS;
+  if(!data.length){ el.innerHTML='<div style="padding:24px;color:#aaa;font-size:12px">No key-context data yet — run a brand.</div>'; return; }
+  const max=data[0].count||1;
+  el.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-content:flex-start;align-items:center;padding:14px;min-height:340px">`
+    + data.map(k=>{
+        const fs = 13 + Math.round((k.count/max)*24);
+        const c = k.nss>1?'#2e9e5b':(k.nss<-1?'#e74c3c':'#e0211b');
+        return `<span style="font-size:${fs}px;font-weight:700;color:${c};cursor:pointer;line-height:1.15" onclick="openDetail('all', null, '${String(k.name).replace(/'/g,"\\'")}')" title="${k.name}: ${k.count} mentions · NSS ${k.nss} — click to view">${k.name}</span>`;
+      }).join('')
+    + `</div>`;
 }
 
 // ══════════════════════════════════════════════════════
@@ -1111,7 +1574,7 @@ function renderTreemap(){
   el.innerHTML = KEYWORDS.map(k=>{
     const flex = (k.count/total*100).toFixed(1);
     const shade = Math.round(80 + (k.count/139)*120);
-    return `<div class="tm-cell" style="flex:${flex};min-width:${k.count>30?120:60}px;height:${k.count>100?100:k.count>50?80:k.count>20?65:50}px;background:${k.color};opacity:${0.55+k.count/280}" title="${k.name}: ${k.count} mentions">
+    return `<div class="tm-cell" style="flex:${flex};min-width:${k.count>30?120:60}px;height:${k.count>100?100:k.count>50?80:k.count>20?65:50}px;background:${k.color};opacity:${0.55+k.count/280};cursor:pointer" title="${k.name}: ${k.count} mentions — click to view" onclick="openDetail('all', null, '${String(k.name).replace(/'/g,"\\'")}')">
       <div class="tm-name">${k.name}</div>
       <div class="tm-pct">${k.count} | ${k.pct}%</div>
     </div>`;
@@ -1121,7 +1584,7 @@ function renderTreemap(){
 // ══════════════════════════════════════════════════════
 // BUBBLE SCATTER (Key Context vs Sentiment)
 // ══════════════════════════════════════════════════════
-const BUBBLE_COLORS=['#4b52d4','#eb7ea8','#52c41a','#faad14','#f16060','#5acce6','#722ed1','#fa8c16','#eb2f96','#13c2c2','#1890ff','#52c41a','#a0522d'];
+const BUBBLE_COLORS=['#e0211b','#eb7ea8','#52c41a','#faad14','#f16060','#5acce6','#722ed1','#fa8c16','#eb2f96','#13c2c2','#1890ff','#52c41a','#a0522d'];
 function renderBubble(){
   const datasets = KEYWORDS.map((k,i)=>({
     label:k.name,
@@ -1151,7 +1614,7 @@ function renderBubble(){
 // NETWORK OPINIONS
 // ══════════════════════════════════════════════════════
 const OPIN_NODES = [
-  {label:'Storage',x:50,y:40,size:80,pos:72,neg:18,c:'#4b52d4'},
+  {label:'Storage',x:50,y:40,size:80,pos:72,neg:18,c:'#e0211b'},
   {label:'Design',x:28,y:28,size:68,pos:60,neg:25,c:'#7b3ec8'},
   {label:'Smart Living',x:70,y:28,size:64,pos:68,neg:20,c:'#2e9e5b'},
   {label:'Wardrobe',x:20,y:55,size:56,pos:55,neg:30,c:'#d4880a'},
@@ -1161,11 +1624,18 @@ const OPIN_NODES = [
 ];
 function renderNetworkOpinions(){
   const el = document.getElementById('network-opinions');
-  el.innerHTML = OPIN_NODES.map(n=>`
-    <div class="node" style="left:${n.x}%;top:${n.y}%;width:${n.size}px;height:${n.size}px;background:${n.c}bb;transform:translate(-50%,-50%);border:3px solid ${n.c}">
-      <div class="node-label" style="font-size:${n.size>60?11:9}px">${n.label}</div>
-    </div>
-  `).join('');
+  const data=KEYWORDS.slice(0,9);
+  if(!data.length){ el.innerHTML='<div style="padding:24px;color:#aaa;font-size:12px">No opinion data yet — run a brand.</div>'; return; }
+  const max=data[0].count||1;
+  el.innerHTML = data.map((k,i)=>{
+    const size=Math.max(42, Math.round(38 + k.count/max*58));
+    const [x,y]=NODE_POS[i%NODE_POS.length];
+    // Colour by real sentiment of opinions about this context: green=positive, red=negative, amber=mixed.
+    const c = k.nss>1?'#2e9e5b':(k.nss<-1?'#e74c3c':'#d4880a');
+    return `<div class="node" style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;background:${c}cc;transform:translate(-50%,-50%);border:3px solid ${c};cursor:pointer" onclick="openDetail('all', null, '${String(k.name).replace(/'/g,"\\'")}')" title="${k.name}: ${k.count} mentions · NSS ${k.nss} — click to view">
+      <div class="node-label" style="font-size:${size>60?11:9}px">${k.name}<br><span style="font-size:9px;opacity:.85">${k.nss>=0?'+':''}${k.nss}</span></div>
+    </div>`;
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════════
@@ -1177,37 +1647,61 @@ function buildWC(data, containerId){
     <span class="wc-word" style="font-size:${10+(d.s/max)*28}px;color:${d.c}">${d.t}</span>
   `).join('');
 }
+// Per-brand word-cloud data, populated from AI dashboards (cross_brands/handles/products).
+// Falls back to the static seed arrays when no live data exists for that cloud.
+const WC_DATA = {}; // { all:{brands:[],handles:[],products:[]}, <brand>:{...} }
+const LOC_DATA = {}; // { all:[{name,pos,neg,neu}], <brand>:[...] } — real AI locations
+const WC_PALETTE = ['#e0211b','#7b3ec8','#c43a5b','#2e9e5b','#d4880a','#0a6ebf','#8e44ad','#16a085','#c0392b','#27ae60','#2980b9','#e67e22','#eb2f96','#13c2c2','#fa8c16'];
+function toWC(arr){
+  return (arr||[]).filter(x=>x && (x.name!=null)).slice(0,15).map((x,i)=>({
+    t:String(x.name), s:Number(x.weight ?? x.count ?? 1)||1, c:WC_PALETTE[i%WC_PALETTE.length]
+  }));
+}
 function renderWordClouds(){
-  buildWC(WC_BRANDS,'wc-brands');
-  buildWC(WC_HANDLES,'wc-handles');
-  buildWC(WC_PRODUCTS,'wc-products');
+  const d = WC_DATA[currentBrand] || WC_DATA.all || {};
+  buildWC((d.brands   && d.brands.length)   ? d.brands   : WC_BRANDS,  'wc-brands');
+  buildWC((d.handles  && d.handles.length)  ? d.handles  : WC_HANDLES, 'wc-handles');
+  buildWC((d.products && d.products.length) ? d.products : WC_PRODUCTS,'wc-products');
 }
 
 // ══════════════════════════════════════════════════════
 // SENTIMENT CIRCLES
 // ══════════════════════════════════════════════════════
 function renderSentCircles(){
-  document.getElementById('sent-circles').innerHTML = PRODUCTS_SENT.map(p=>`
-    <div class="sc-wrap">
-      <div class="sc-circle" style="width:${p.size}px;height:${p.size}px;background:${p.pos>=50?'#52c41a':'#ff4d4f'}">${p.pos}%</div>
-      <div class="sc-name">${p.name}</div>
-    </div>
-  `).join('');
+  const data=[...PRODUCTS_SENT].filter(p=>p.count>0).sort((a,b)=>(b.count||0)-(a.count||0));
+  const el=document.getElementById('sent-circles');
+  if(!data.length){ el.innerHTML='<div style="padding:20px;color:#aaa;font-size:12px">No product data yet.</div>'; return; }
+  const max=Math.max(1,...data.map(p=>p.count||0));
+  // Sized green/red bubble cluster (green = mostly positive, red = mostly negative), clickable.
+  el.innerHTML = data.map(p=>{
+    const size=Math.max(50,Math.min(118,44+(p.count||0)/max*78));
+    const bg=p.pos>=50?'#5fb96a':'#e0625f';
+    return `<div class="sc-wrap" style="cursor:pointer" onclick="openDetail('all',null,'${String(p.name).replace(/'/g,"\\'")}')" title="${p.name}: ${p.count} mentions · ${p.pos}% positive">
+      <div class="sc-circle" style="width:${size}px;height:${size}px;background:${bg};flex-direction:column;text-align:center;padding:6px;line-height:1.1">
+        <span style="font-size:${size>80?15:13}px;font-weight:800">${p.count}</span>
+        <span style="font-size:9px;font-weight:600;max-width:${size-10}px;overflow:hidden">${p.name}</span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════════
 // LOCATION CHART
 // ══════════════════════════════════════════════════════
 function renderLocationChart(){
+  const data=((LOC_DATA[currentBrand]&&LOC_DATA[currentBrand].length)?LOC_DATA[currentBrand]:LOC_DATA.all)||[];
+  const wrap=document.getElementById('loc-wrap'), empty=document.getElementById('loc-empty');
+  if(!data.length){ if(charts.loc){charts.loc.destroy();charts.loc=null;} if(wrap)wrap.style.display='none'; if(empty)empty.style.display='block'; return; }
+  if(wrap)wrap.style.display=''; if(empty)empty.style.display='none';
   if(charts.loc) charts.loc.destroy();
   charts.loc = new Chart(document.getElementById('chart-location'),{
     type:'bar',
     data:{
-      labels:LOCATIONS.map(l=>l.name),
+      labels:data.map(l=>l.name),
       datasets:[
-        {label:'Positive',data:LOCATIONS.map(l=>l.pos),backgroundColor:'#52c41a',stack:'s'},
-        {label:'Negative',data:LOCATIONS.map(l=>l.neg),backgroundColor:'#ff4d4f',stack:'s'},
-        {label:'Neutral', data:LOCATIONS.map(l=>l.neu),backgroundColor:'#faad14',stack:'s'},
+        {label:'Positive',data:data.map(l=>l.pos),backgroundColor:'#16a34a',stack:'s'},
+        {label:'Negative',data:data.map(l=>l.neg),backgroundColor:'#e11d48',stack:'s'},
+        {label:'Neutral', data:data.map(l=>l.neu),backgroundColor:'#f59e0b',stack:'s'},
       ]
     },
     options:{
@@ -1224,76 +1718,129 @@ function renderLocationChart(){
 // ══════════════════════════════════════════════════════
 // DETAIL VIEW
 // ══════════════════════════════════════════════════════
-function openDetail(sentiment){
+let DETAIL_SETS = {}, detailFilter = 'all';
+function renderDetailGrid(){
+  const arr = DETAIL_SETS[detailFilter] || [];
+  const grid = document.getElementById('posts-grid');
+  grid.innerHTML = arr.length
+    ? arr.map(p=>postCard(p, p._didx)).join('')
+    : '<div style="padding:24px;color:#aaa;font-size:13px">None in this view.</div>';
+}
+function setDetailFilter(f){
+  detailFilter = f;
+  document.querySelectorAll('#showing-count .det-chip').forEach(c=>c.classList.toggle('active', c.dataset.f===f));
+  renderDetailGrid();
+}
+function openDetail(sentiment, intent, keyword){
   currentSentiment = sentiment;
-  const d = BRAND_DATA[currentBrand]||BRAND_DATA.all;
-  const label = sentiment==='positive'?'Positive':sentiment==='negative'?'Negative':'Neutral';
-  const count = sentiment==='positive'?d.pos:sentiment==='negative'?d.neg:d.neu;
+  currentIntent = intent || null;
+  const label = sentiment==='positive'?'Positive':sentiment==='negative'?'Negative':sentiment==='neutral'?'Neutral':'All';
+  const brandLabel = (currentBrand && currentBrand!=='all') ? currentBrand : 'All Brands';
+  const kw = keyword ? String(keyword).toLowerCase() : '';
+
+  // Include EVERYTHING (mentions, comments AND the brand's own posts) so nothing is
+  // hidden — newest first. We split into two columns below: with vs without a commenter.
+  const posts = ALL_POSTS.filter(p=>
+    (sentiment==='all' || p.sentiment===sentiment) &&
+    (!intent || (p.intent||'General Discussion')===intent) &&
+    (!kw || String(p.text||'').toLowerCase().includes(kw)) &&
+    (currentBrand==='all' || p.brand===currentBrand)
+  ).sort((a,b)=> (Date.parse(b.timestamps||b.date)||0) - (Date.parse(a.timestamps||a.date)||0));
+  posts.forEach((p,i)=>p._didx=i);
+  const count = posts.length;
+  DETAIL_POSTS = posts; // expose for the post modal
 
   document.getElementById('detail-crumb').innerHTML =
-    `<b>X-Attribute:</b> Sentiment (${label}) &nbsp;<b>Y-Series:</b> Mention Count (${count})`;
+    `<b>Brand:</b> ${brandLabel} &nbsp; <b>Sentiment:</b> ${label}`
+    + (intent?` &nbsp; <b>Intent:</b> ${intent}`:'')
+    + (keyword?` &nbsp; <b>Context:</b> ${keyword}`:'')
+    + ` &nbsp; <b>Mentions:</b> ${count}`;
 
-  // Stats bar
+  // Platform distribution computed FROM the filtered posts (not fixed ratios)
+  const PLT = [['instagram','Instagram','#eb7ea8'],['linkedin','LinkedIn','#5b8dee'],['facebook','Facebook','#5b9ded'],['youtube','YouTube','#f16060'],['twitter','Twitter','#5acce6'],['tiktok','TikTok','#010101'],['threads','Threads','#333']];
+  const pltCount = {}; PLT.forEach(([k])=>pltCount[k]=0);
+  posts.forEach(p=>{ if(pltCount[p.platform]!=null) pltCount[p.platform]++; });
+  const uniqueUsers = new Set(posts.map(p=>p.handle)).size;
+
+  // Stats bar (real counts from the filtered set — correct for both 'all' and a single sentiment)
+  const cPos=posts.filter(p=>p.sentiment==='positive').length;
+  const cNeg=posts.filter(p=>p.sentiment==='negative').length;
+  const cNeu=posts.filter(p=>p.sentiment==='neutral').length;
+  const pct=n=>count?Math.round(n/count*100)+'%':'0%';
   document.getElementById('detail-stats-bar').innerHTML = `
     <div class="ds-item"><div class="ds-label">Total Mentions</div><div class="ds-val">${count}</div></div>
-    <div class="ds-item"><div class="ds-label">Positive</div><div class="ds-val">${sentiment==='positive'?count:0}</div><div class="ds-sub">${sentiment==='positive'?'100%':'0%'}</div></div>
-    <div class="ds-item"><div class="ds-label">Negative</div><div class="ds-val">${sentiment==='negative'?count:0}</div><div class="ds-sub neg">${sentiment==='negative'?'100%':'0%'}</div></div>
-    <div class="ds-item"><div class="ds-label">Neutral</div><div class="ds-val">${sentiment==='neutral'?count:0}</div><div class="ds-sub neu">${sentiment==='neutral'?'100%':'0%'}</div></div>
-    <div class="ds-item"><div class="ds-label">Unique Users</div><div class="ds-val">${Math.round(count*0.73)}</div></div>
-    <div class="ds-item"><div class="ds-label">Verified Users</div><div class="ds-val">${Math.round(count*0.28)}</div></div>
+    <div class="ds-item"><div class="ds-label">Positive</div><div class="ds-val">${cPos}</div><div class="ds-sub">${pct(cPos)}</div></div>
+    <div class="ds-item"><div class="ds-label">Negative</div><div class="ds-val">${cNeg}</div><div class="ds-sub neg">${pct(cNeg)}</div></div>
+    <div class="ds-item"><div class="ds-label">Neutral</div><div class="ds-val">${cNeu}</div><div class="ds-sub neu">${pct(cNeu)}</div></div>
+    <div class="ds-item"><div class="ds-label">Unique Users</div><div class="ds-val">${uniqueUsers}</div></div>
   `;
 
-  // Filter posts
-  const posts = ALL_POSTS.filter(p=>p.sentiment===sentiment);
   document.getElementById('social-count').textContent = posts.length;
-  document.getElementById('showing-count').textContent = `Showing 1 - ${Math.min(posts.length,12)} mentions`;
 
-  document.getElementById('posts-grid').innerHTML = posts.map(p=>postCard(p)).join('');
+  // ── Filter chips + dense responsive grid (no more two tall scrolling columns) ──
+  const withName = posts.filter(p=>p.type!=='post');
+  const noName   = posts.filter(p=>p.type==='post');
+  DETAIL_SETS = { all: posts, with: withName, without: noName };
+  detailFilter = 'all';
+  document.getElementById('showing-count').innerHTML = count
+    ? `<span style="color:#888;margin-right:8px">Filter:</span>`
+      + `<span class="det-chip active" data-f="all" onclick="setDetailFilter('all')">All (${count})</span>`
+      + `<span class="det-chip" data-f="with" onclick="setDetailFilter('with')">👤 With commenter (${withName.length})</span>`
+      + `<span class="det-chip" data-f="without" onclick="setDetailFilter('without')">📄 Without commenter (${noName.length})</span>`
+    : `No ${label.toLowerCase()} mentions for ${brandLabel}.`;
+  const grid = document.getElementById('posts-grid');
+  grid.style.display = '';            // back to the .posts-grid 4-column responsive grid
+  renderDetailGrid();
 
-  // Word cloud for detail
+  // Word cloud for detail (already brand+sentiment scoped via posts)
   const words = p2words(posts);
-  document.getElementById('detail-wc').innerHTML = words.map(w=>`
-    <span class="wc-word" style="font-size:${10+w.s*22}px;color:${BUBBLE_COLORS[w.i%13]}">${w.t}</span>
-  `).join('');
+  document.getElementById('detail-wc').innerHTML = words.length
+    ? words.map(w=>`<span class="wc-word" style="font-size:${10+w.s*22}px;color:${BUBBLE_COLORS[w.i%13]}">${w.t}</span>`).join('')
+    : '<div style="color:#aaa;font-size:12px">Not enough text to build a word cloud.</div>';
 
-  // Category chart
+  // Category + Source charts (real platform counts)
+  const catData = PLT.map(([k])=>pltCount[k]);
   setTimeout(()=>{
     if(detailCatChart) detailCatChart.destroy();
     detailCatChart = new Chart(document.getElementById('chart-detail-cat'),{
       type:'bar',
-      data:{
-        labels:['Instagram','LinkedIn','Facebook','YouTube','Twitter'],
-        datasets:[{data:[Math.round(count*.35),Math.round(count*.28),Math.round(count*.20),Math.round(count*.12),Math.round(count*.05)],backgroundColor:['#eb7ea8','#5b8dee','#5b9ded','#f16060','#5acce6'],borderRadius:4}]
-      },
+      data:{ labels:PLT.map(p=>p[1]), datasets:[{data:catData,backgroundColor:PLT.map(p=>p[2]),borderRadius:4}] },
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(0,0,0,.04)'}}}}
     });
     if(sourceChart) sourceChart.destroy();
     sourceChart = new Chart(document.getElementById('chart-source'),{
       type:'pie',
-      data:{
-        labels:['Instagram','LinkedIn','Facebook','YouTube','Twitter'],
-        datasets:[{data:[35,28,20,12,5],backgroundColor:['#eb7ea8','#5b8dee','#5b9ded','#f16060','#5acce6'],borderWidth:2,borderColor:'#fff'}]
-      },
+      data:{ labels:PLT.map(p=>p[1]), datasets:[{data:catData,backgroundColor:PLT.map(p=>p[2]),borderWidth:2,borderColor:'#fff'}] },
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10}}}}
     });
   },50);
 
-  // Influencers
-  const inf = posts.slice(0,6).map(p=>({name:p.name,handle:p.handle,platform:p.platform,engagement:p.engagement,color:p.color}));
-  document.getElementById('inf-grid').innerHTML = inf.map(i=>`
-    <div class="inf-card">
-      <div class="inf-avatar" style="background:${i.color}">${i.name.charAt(0)}</div>
-      <div>
-        <div class="inf-name">${i.name}</div>
-        <div class="inf-handle">${i.handle}</div>
-        <div class="inf-metric">Engagement: ${fmtK(i.engagement)}</div>
-      </div>
-    </div>
-  `).join('');
+  // Influencers — REAL people (third-party creators/commenters), not the brand's own posts.
+  const infSrc = posts.filter(p=>p.type!=='post');
+  const byHandle = {};
+  (infSrc.length?infSrc:posts).forEach((p)=>{
+    const k = p.handle || p.name;
+    if(!byHandle[k]) byHandle[k] = {name:p.name,handle:p.handle,platform:p.platform,engagement:0,color:p.color,idx:p._didx};
+    byHandle[k].engagement += Number(p.engagement)||0;
+  });
+  const inf = Object.values(byHandle).sort((a,b)=>b.engagement-a.engagement).slice(0,12);
+  document.getElementById('inf-grid').innerHTML = inf.length
+    ? inf.map(i=>`
+      <div class="inf-card" style="cursor:pointer" onclick="openPostModal(${i.idx})">
+        <div class="inf-avatar" style="background:${i.color}">${(i.name||'?').charAt(0)}</div>
+        <div>
+          <div class="inf-name">${i.name}</div>
+          <div class="inf-handle">${i.handle}</div>
+          <div class="inf-metric">Engagement: ${fmtK(i.engagement)}</div>
+        </div>
+      </div>`).join('')
+    : '<div style="padding:20px;color:#aaa;font-size:12px">No authors in this view yet.</div>';
 
-  // Source table
-  const srcRows = [['Instagram',Math.round(count*.35),'#eb7ea8'],['LinkedIn',Math.round(count*.28),'#5b8dee'],['Facebook',Math.round(count*.20),'#5b9ded'],['YouTube',Math.round(count*.12),'#f16060'],['Twitter',Math.round(count*.05),'#5acce6']];
-  document.getElementById('source-table').innerHTML = `<table style="width:100%;font-size:12px;border-collapse:collapse">${srcRows.map(r=>`<tr><td style="padding:6px 8px">${r[0]}</td><td style="padding:6px 8px;font-weight:700;color:${r[2]}">${r[1]}</td><td style="padding:6px 8px;width:120px"><div style="height:6px;border-radius:3px;background:${r[2]};width:${r[1]/count*100}%"></div></td></tr>`).join('')}</table>`;
+  // Source table (real platform counts)
+  const denom = count || 1;
+  document.getElementById('source-table').innerHTML = `<table style="width:100%;font-size:12px;border-collapse:collapse">${
+    PLT.map(([k,name,clr])=>`<tr><td style="padding:6px 8px">${name}</td><td style="padding:6px 8px;font-weight:700;color:${clr}">${pltCount[k]}</td><td style="padding:6px 8px;width:120px"><div style="height:6px;border-radius:3px;background:${clr};width:${pltCount[k]/denom*100}%"></div></td></tr>`).join('')
+  }</table>`;
 
   // Location table
   const tbody = document.querySelector('#loc-table-detail tbody');
@@ -1323,6 +1870,54 @@ function closeDetail(){
   document.body.style.overflow='';
 }
 
+// Read More: expand/collapse the post text inline (no navigation) (#3)
+function toggleReadMore(el){
+  const textEl = el.previousElementSibling;
+  const full = decodeURIComponent(textEl.getAttribute('data-full')||'');
+  const expanded = el.dataset.expanded === '1';
+  if(expanded){
+    textEl.textContent = full.slice(0,180)+'…';
+    el.textContent = '… Read More';
+    el.dataset.expanded = '0';
+  } else {
+    textEl.textContent = full;
+    el.textContent = 'Show less';
+    el.dataset.expanded = '1';
+  }
+}
+
+// In-dashboard post reader — read the post without leaving the page (#7)
+function openPostModal(idx){
+  const p = DETAIL_POSTS[idx];
+  if(!p) return;
+  const PLT_ICON = {instagram:'📸',linkedin:'💼',facebook:'👥',youtube:'▶',twitter:'🐦'};
+  const hasUrl = p.url && p.url !== '#';
+  const sentClr = {positive:'#52c41a',negative:'#ff4d4f',neutral:'#faad14'}[p.sentiment]||'#888';
+  document.getElementById('post-modal-body').innerHTML = `
+    <div class="pm-head">
+      <div class="pc-avatar" style="background:${p.color}">${(p.name||'?').charAt(0)}</div>
+      <div style="flex:1">
+        <div class="pc-name">${p.name}</div>
+        <div class="pc-handle">${p.handle} · ${PLT_ICON[p.platform]||''} ${p.platform}</div>
+      </div>
+      <span class="pm-sent" style="background:${sentClr}1a;color:${sentClr}">${p.sentiment}</span>
+    </div>
+    <div class="pm-meta">🕐 ${p.date} &nbsp;·&nbsp; ${p.intent||'General Discussion'}${p.brand?(' &nbsp;·&nbsp; '+p.brand):''}</div>
+    ${cardThumb(p)?`<div class="pm-thumb" style="background-image:url('${cardThumb(p)}')"></div>`:''}
+    <div class="pm-text">${(p.text||'(no text)').replace(/</g,'&lt;')}</div>
+    <div class="pm-stats">
+      <span>♥ ${p.likes}</span><span>💬 ${p.comments}</span><span>↺ ${p.shares}</span><span>👁 ${fmtK(p.views||0)}</span>
+      <span>📈 ${fmtK(p.engagement)} eng</span><span>${p.engRate} rate</span>
+    </div>
+    ${hasUrl?`<a class="pm-link" href="${p.url}" target="_blank" rel="noopener">Open original post ↗</a>`:''}
+  `;
+  document.getElementById('post-modal').classList.add('open');
+}
+function closePostModal(e){
+  if(e && e.target.id!=='post-modal' && e.target.id!=='post-modal-close') return;
+  document.getElementById('post-modal').classList.remove('open');
+}
+
 // Build word cloud from posts
 function p2words(posts){
   const freq={};
@@ -1332,26 +1927,44 @@ function p2words(posts){
   return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([t,c],i)=>({t,s:c/Math.max(...Object.values(freq)),i}));
 }
 
-function postCard(p){
-  const thumbBg = {instagram:'linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)',linkedin:'linear-gradient(135deg,#0a66c2,#3b82c4)',facebook:'linear-gradient(135deg,#1877f2,#42a5f5)',youtube:'linear-gradient(135deg,#ff0000,#ff6b6b)',twitter:'linear-gradient(135deg,#1da1f2,#5ac8fa)'}[p.platform]||'#eee';
-  const PLT_ICON = {instagram:'📸',linkedin:'💼',facebook:'👥',youtube:'▶',twitter:'🐦'};
+// ── Image helpers: stable YouTube thumbs + same-origin proxy for everything else ──
+function ytId(u){ const m=String(u||'').match(/(?:v=|youtu\.be\/|\/shorts\/|\/embed\/)([\w-]{6,})/); return m?m[1]:''; }
+function imgProxy(u){ return u ? '/img?url='+encodeURIComponent(u) : ''; }
+function cardThumb(p){
+  if(p.platform==='youtube'){ const id=ytId(p.url); if(id) return 'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg'; } // stable, never expires
+  return imgProxy(p.thumb);
+}
+function postCard(p, idx){
+  const thumbBg = {instagram:'linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)',linkedin:'linear-gradient(135deg,#0a66c2,#3b82c4)',facebook:'linear-gradient(135deg,#1877f2,#42a5f5)',youtube:'linear-gradient(135deg,#ff0000,#ff6b6b)',twitter:'linear-gradient(135deg,#1da1f2,#5ac8fa)',tiktok:'linear-gradient(135deg,#010101,#69C9D0,#EE1D52)',threads:'linear-gradient(135deg,#222,#555)'}[p.platform]||'#eee';
+  const PLT_ICON = {instagram:'📸',linkedin:'💼',facebook:'👥',youtube:'▶',twitter:'🐦',tiktok:'🎵',threads:'@'};
   const hasUrl = p.url && p.url !== '#';
+  const longText = (p.text||'').length > 180;
+  const verifiedBadge = p.verified?'<span title="Verified" style="color:#1d9bf0;font-size:11px">✔</span>':'';
+  const followersLine = p.followers?`<div style="font-size:10px;color:#888;margin-top:1px">👤 ${fmtK(p.followers)} followers</div>`:'';
+  const typeTag = p.type==='comment'?'<span style="font-size:9px;background:#fdecec;color:#e0211b;border-radius:8px;padding:1px 6px;margin-left:4px">comment</span>':'';
+  const avUrl = imgProxy(p.avatar);
+  const thumbUrl = cardThumb(p);
+  const avatarHtml = avUrl
+    ? `<div class="pc-avatar" style="background-image:url('${avUrl}');background-size:cover;background-position:center;background-color:${p.color}">&nbsp;</div>`
+    : `<div class="pc-avatar" style="background:${p.color}">${(p.name||'?').charAt(0)}</div>`;
+  // Whole card opens the in-dashboard reader (#7). Read More expands inline (#3). External link is separate.
   return `
-  <div class="post-card" style="cursor:${hasUrl?'pointer':'default'}" onclick="${hasUrl?`window.open('${p.url}','_blank')`:''}">
+  <div class="post-card" style="cursor:pointer" onclick="openPostModal(${idx})">
     <div class="pc-header">
-      <div class="pc-avatar" style="background:${p.color}">${p.name.charAt(0)}</div>
+      ${avatarHtml}
       <div class="pc-info">
-        <div class="pc-name">${p.name}</div>
+        <div class="pc-name">${p.name} ${verifiedBadge}${typeTag}</div>
         <div class="pc-handle">${p.handle} <span style="font-size:10px;color:#aaa">${PLT_ICON[p.platform]||''} ${p.platform}</span></div>
+        ${followersLine}
       </div>
       <div class="pc-date" style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
         <span>🕐 ${p.date}</span>
-        ${hasUrl?`<span style="font-size:10px;color:#4b52d4;font-weight:600">View Post ↗</span>`:''}
+        ${hasUrl?`<a href="${p.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:10px;color:#e0211b;font-weight:600;text-decoration:none">View Post ↗</a>`:''}
       </div>
     </div>
-    <div class="pc-text">${p.text}</div>
-    <div class="pc-readmore">... Read More</div>
-    <div class="pc-thumb" style="background:${thumbBg}${p.thumb?`;background-image:url(${p.thumb});background-size:cover;background-position:center`:''}""></div>
+    <div class="pc-text" data-full="${encodeURIComponent(p.text||'')}">${longText?(p.text.slice(0,180)+'…'):(p.text||'')}</div>
+    ${longText?`<div class="pc-readmore" onclick="event.stopPropagation();toggleReadMore(this)">… Read More</div>`:''}
+    <div class="pc-thumb" style="background:${thumbBg}${thumbUrl?`;background-image:url('${thumbUrl}');background-size:cover;background-position:center`:''}"></div>
     <div class="pc-stats">
       <span class="pc-stat">♥ ${p.likes}</span>
       <span class="pc-stat">💬 ${p.comments}</span>
@@ -1375,7 +1988,263 @@ function showMainTab(id,btn){
   document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   btn.classList.add('active');
-  setTimeout(renderAll,50);
+  if(id==='news') renderNews();
+  else if(id==='crisis') renderCrisis();
+  else if(id==='trends') setTimeout(renderTrends2,60);
+  else if(id==='leads') renderLeads();
+  else setTimeout(renderAll,50);
+}
+
+// ── Top-level section navigation (Listen / Analyze / Publish / Engage / Settings) ──
+function showSection(name, btn){
+  ['listen','analyze','publish','engage','settings'].forEach(s=>{
+    const el=document.getElementById('view-'+s); if(el) el.style.display = (s===name)?'':'none';
+  });
+  const shown=document.getElementById('view-'+name);
+  if(shown){ shown.style.animation='none'; void shown.offsetWidth; shown.style.animation='viewIn .4s cubic-bezier(.22,1,.36,1)'; }
+  document.querySelectorAll('.sec-nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.sec===name));
+  if(name==='listen') setTimeout(renderAll,50);
+  if(name==='analyze') setTimeout(renderBenchmark,60);
+  if(name==='settings') loadBoards();
+}
+async function loadBoards(){
+  const el=document.getElementById('boards-list'); if(!el) return;
+  el.innerHTML='<div style="color:#aaa;font-size:12px">Loading…</div>';
+  try{
+    const res=await fetch((getBaseUrl()||'')+'/brands',{signal:AbortSignal.timeout(8000)});
+    const d=await res.json(); const boards=d.boards||[];
+    if(!boards.length){ el.innerHTML='<div style="color:#aaa;font-size:12px">No boards yet.</div>'; return; }
+    el.innerHTML='<table class="board-tbl"><thead><tr><th>Board</th><th>Handles</th></tr></thead><tbody>'+
+      boards.map(b=>{
+        const h=[['IG',b.Instagram_Handle],['YT',b.YouTube_Handle],['LI',b.LinkedIn_Handle],['FB',b.Facebook_Handle],['X',b.Twitter_Handle]]
+          .filter(x=>x[1]).map(x=>x[0]+':'+x[1]).join(' · ')||'—';
+        return `<tr><td style="font-weight:600">${b['Brand Name']}</td><td style="color:#888">${h}</td></tr>`;
+      }).join('')+'</tbody></table>';
+  }catch(e){ el.innerHTML='<div style="color:#c43a5b;font-size:12px">Could not load boards: '+e.message+'</div>'; }
+}
+// ── Add New Brand modal ──
+const AB_PLATFORMS=[
+  {key:'instagram',label:'Instagram',sup:1},{key:'twitter',label:'Twitter/X',sup:1},
+  {key:'linkedin',label:'LinkedIn',sup:1},{key:'youtube',label:'YouTube',sup:1},
+  {key:'facebook',label:'Facebook',sup:1},{key:'reddit',label:'Reddit',sup:0},
+  {key:'news',label:'News',sup:0},{key:'g2',label:'G2',sup:0},{key:'trustpilot',label:'Trustpilot',sup:0},{key:'quora',label:'Quora',sup:0}
+];
+let AB={kw:[],ex:[],plats:new Set(['instagram','twitter','linkedin','youtube']),own:true};
+function openAddBrand(){
+  AB={kw:[],ex:[],plats:new Set(['instagram','twitter','linkedin','youtube']),own:true};
+  document.getElementById('ab-name').value=''; document.getElementById('ab-desc').value='';
+  document.getElementById('ab-kw-in').value=''; document.getElementById('ab-ex-in').value='';
+  document.getElementById('ab-status').textContent='';
+  document.getElementById('ab-own').checked=true; document.getElementById('ab-own-wrap').classList.add('on');
+  renderChips('kw'); renderChips('ex'); renderPlats(); renderHandles(); updatePlatCount();
+  document.getElementById('addbrand-modal').classList.add('open');
+}
+function closeAddBrand(){ document.getElementById('addbrand-modal').classList.remove('open'); }
+function toggleOwn(){ const c=document.getElementById('ab-own'); setTimeout(()=>{ AB.own=c.checked; document.getElementById('ab-own-wrap').classList.toggle('on',c.checked); },0); }
+function addChip(type){ const inp=document.getElementById('ab-'+type+'-in'); const v=inp.value.trim(); if(!v)return; AB[type].push(v); inp.value=''; renderChips(type); }
+function removeChip(type,i){ AB[type].splice(i,1); renderChips(type); }
+function renderChips(type){ document.getElementById('ab-'+type+'-chips').innerHTML=AB[type].map((c,i)=>`<span class="chip">${c}<b onclick="removeChip('${type}',${i})">×</b></span>`).join(''); }
+function togglePlatform(key){ if(AB.plats.has(key))AB.plats.delete(key); else AB.plats.add(key); renderPlats(); renderHandles(); updatePlatCount(); }
+function renderPlats(){ document.getElementById('ab-plats').innerHTML=AB_PLATFORMS.map(p=>`<div class="plat-btn ${AB.plats.has(p.key)?'on':''} ${p.sup?'':'dim'}" onclick="togglePlatform('${p.key}')" title="${p.sup?'':'Not yet scraped'}">${p.label}</div>`).join(''); }
+function renderHandles(){
+  const sup=AB_PLATFORMS.filter(p=>p.sup && AB.plats.has(p.key));
+  document.getElementById('ab-handles').innerHTML=sup.length?sup.map(p=>`<div class="hand-row"><label>${p.label.replace('/X','')}</label><input id="ab-h-${p.key}" placeholder="@handle or URL"/></div>`).join('')
+    :'<div style="font-size:11px;color:#aaa;padding:6px">Select a supported platform (Instagram/Twitter/LinkedIn/YouTube/Facebook) to add handles.</div>';
+}
+function updatePlatCount(){ document.getElementById('ab-platcount').textContent=AB.plats.size+' platform'+(AB.plats.size!==1?'s':'')+' selected'; }
+async function submitAddBrand(){
+  const name=document.getElementById('ab-name').value.trim();
+  const st=document.getElementById('ab-status');
+  if(!name){ st.style.color='#e11d48'; st.textContent='Brand name is required.'; return; }
+  if(!AB.kw.length){ st.style.color='#e11d48'; st.textContent='Add at least one keyword.'; return; }
+  const h=k=>{ const el=document.getElementById('ab-h-'+k); return el?el.value.trim():''; };
+  const payload={ name, own:AB.own, description:document.getElementById('ab-desc').value.trim(),
+    keywords:AB.kw.join(', '), exclusions:AB.ex.join(', '), platforms:[...AB.plats].join(','),
+    instagram:h('instagram'), twitter:h('twitter'), linkedin:h('linkedin'), youtube:h('youtube'), facebook:h('facebook') };
+  st.style.color='#888'; st.textContent='Creating…';
+  document.getElementById('ab-submit').disabled=true;
+  try{
+    const res=await fetch((getBaseUrl()||'')+'/brands',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await res.json();
+    if(d.ok){
+      if(AB.own) window.OWN_BRAND=name;
+      if(Array.isArray(window.N8N_BRANDS)&&!window.N8N_BRANDS.includes(name)) window.N8N_BRANDS.push(name);
+      try{ renderBrandPicker(); }catch{}
+      st.style.color='#16a34a'; st.textContent='✓ Brand "'+name+'" created.';
+      loadBoards(); setTimeout(closeAddBrand,900);
+    } else { st.style.color='#e11d48'; st.textContent='Error: '+(d.error||'failed'); }
+  }catch(e){ st.style.color='#e11d48'; st.textContent='Error: '+e.message; }
+  finally{ document.getElementById('ab-submit').disabled=false; }
+}
+
+// ── Phase 1: News / Crisis / Trends / Leads & Ideas ──
+async function renderNews(){
+  const el=document.getElementById('news-list'); const sub=document.getElementById('news-sub');
+  const targets = currentBrand==='all' ? getBrandList() : [currentBrand];
+  sub.textContent='Latest news mentioning '+(currentBrand==='all'?'your brands':currentBrand)+'.';
+  el.innerHTML='<div style="color:#aaa;font-size:12px">Loading news…</div>';
+  try{
+    const results=await Promise.all(targets.map(b=>
+      fetch((getBaseUrl()||'')+'/news?q='+encodeURIComponent(b),{signal:AbortSignal.timeout(15000)})
+        .then(r=>r.json()).then(d=>(d.articles||[]).map(a=>({...a,brand:b}))).catch(()=>[])));
+    const arts=results.flat();
+    if(!arts.length){ el.innerHTML='<div style="color:#aaa;font-size:13px;padding:16px">No recent news found.</div>'; return; }
+    el.innerHTML=arts.map(a=>`
+      <div style="border:1px solid #eee;border-radius:8px;padding:12px 14px;margin-bottom:10px;background:#fff">
+        <a href="${a.link}" target="_blank" rel="noopener" style="font-weight:700;font-size:13.5px;color:#222;text-decoration:none">${a.title}</a>
+        <div style="font-size:11px;color:#888;margin-top:4px">📰 ${a.source||''}${a.date?(' · '+a.date):''}${currentBrand==='all'?(' · '+a.brand):''}</div>
+        ${a.snippet?`<div style="font-size:12px;color:#555;margin-top:6px">${a.snippet}</div>`:''}
+      </div>`).join('');
+  }catch(e){ el.innerHTML='<div style="color:#c43a5b;font-size:12px">Could not load news: '+e.message+'</div>'; }
+}
+function renderCrisis(){
+  const el=document.getElementById('crisis-list');
+  const neg=ALL_POSTS.filter(p=>p.sentiment==='negative' && (currentBrand==='all'||p.brand===currentBrand));
+  if(!neg.length){ el.innerHTML='<div style="padding:18px;color:#2e9e5b;font-size:13px">✓ No negative-sentiment crisis signals right now.</div>'; return; }
+  const byDay={}; neg.forEach(p=>{ const d=(p.date||'Undated'); byDay[d]=(byDay[d]||0)+1; });
+  const spikes=Object.entries(byDay).filter(([,c])=>c>=3);
+  neg.sort((a,b)=>(Date.parse(b.timestamps||b.date)||0)-(Date.parse(a.timestamps||a.date)||0));
+  el.innerHTML=`<div style="background:#fff2f0;border:1px solid #ffa39e;border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#c43a5b"><b>${neg.length}</b> negative mention${neg.length>1?'s':''} detected${spikes.length?` · ${spikes.length} day(s) with a spike (≥3)`:''}.</div>`+
+    neg.map(p=>`<div style="border:1px solid #ffd6d2;border-left:3px solid #e0625f;border-radius:6px;padding:10px 12px;margin-bottom:8px;background:#fff">
+      <div style="font-size:11px;color:#888">${p.name||p.handle} · ${p.platform} · ${p.date}</div>
+      <div style="font-size:12.5px;color:#333;margin-top:4px">${(p.text||'').slice(0,220)}</div></div>`).join('');
+}
+function renderTrends2(){
+  const feed=ALL_POSTS.filter(p=>currentBrand==='all'||p.brand===currentBrand);
+  const months={}; feed.forEach(p=>{ const d=new Date(p.timestamps||p.date); if(isNaN(d)||d.getFullYear()<2000)return;
+    const k=d.toLocaleDateString('en-US',{month:'short',year:'numeric'}); if(!months[k])months[k]={t:0,pos:0,neg:0,_d:d};
+    months[k].t++; if(p.sentiment==='positive')months[k].pos++; else if(p.sentiment==='negative')months[k].neg++; });
+  const keys=Object.keys(months).sort((a,b)=>months[a]._d-months[b]._d);
+  if(charts.trendsVol) charts.trendsVol.destroy();
+  charts.trendsVol=new Chart(document.getElementById('chart-trends-vol'),{type:'line',data:{labels:keys,datasets:[
+    {label:'Total',data:keys.map(k=>months[k].t),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.12)',tension:.4,fill:true},
+    {label:'Positive',data:keys.map(k=>months[k].pos),borderColor:'#52c41a',tension:.4},
+    {label:'Negative',data:keys.map(k=>months[k].neg),borderColor:'#ff4d4f',tension:.4},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},scales:{y:{beginAtZero:true}}}});
+  const t=document.getElementById('trends-topics'); const mx=KEYWORDS.length?KEYWORDS[0].count:1;
+  t.innerHTML=KEYWORDS.slice(0,25).map(k=>`<span class="wc-word" style="font-size:${12+(k.count/mx)*20}px;color:${k.color};cursor:pointer" onclick="openDetail('all',null,'${String(k.name).replace(/'/g,"\\'")}')">${k.name}</span>`).join('') || '<span style="color:#aaa;font-size:12px">No topics yet.</span>';
+}
+function renderLeads(){
+  const feed=ALL_POSTS.filter(p=>p.type!=='post' && (currentBrand==='all'||p.brand===currentBrand));
+  const leads=feed.filter(p=>['Product Inquiry','Support Request','Feedback','Complaint'].includes(p.intent));
+  document.getElementById('leads-list').innerHTML = leads.length ? leads.map(p=>`<div style="border:1px solid #eee;border-radius:6px;padding:10px;margin-bottom:8px">
+      <div style="font-size:11px;color:#888">${p.name||p.handle} · ${p.platform} · <span style="color:#e0211b;font-weight:600">${p.intent}</span></div>
+      <div style="font-size:12.5px;color:#333;margin-top:4px">${(p.text||'').slice(0,180)}</div>
+      ${p.url&&p.url!=='#'?`<a href="${p.url}" target="_blank" rel="noopener" style="font-size:11px;color:#e0211b">View ↗</a>`:''}</div>`).join('')
+    : '<div style="padding:16px;color:#aaa;font-size:12px">No inquiry / support / complaint leads found.</div>';
+  const pos=KEYWORDS.filter(k=>k.nss>=1).slice(0,8);
+  document.getElementById('ideas-list').innerHTML = pos.length ? pos.map(k=>`<div style="border:1px solid #e8eaf6;background:#fafbff;border-radius:8px;padding:12px;margin-bottom:8px">
+      <div style="font-weight:700;font-size:13px;color:#8f1410">Post about “${k.name}”</div>
+      <div style="font-size:12px;color:#555;margin-top:4px">Resonating positively — ${k.count} mentions, NSS +${k.nss}. Create content highlighting ${k.name}.</div></div>`).join('')
+    : '<div style="padding:16px;color:#aaa;font-size:12px">Not enough positive signal for ideas yet.</div>';
+}
+
+// ── Phase 2–4: Analyze (Benchmarking / Pillar Health / Performance / Anomaly / Reports) ──
+const OWN_BRAND = () => (window.OWN_BRAND || 'Ebco');
+function brandMetrics(){
+  const brands=[...new Set(ALL_POSTS.map(p=>p.brand))].filter(Boolean);
+  return brands.map(b=>{
+    const items=ALL_POSTS.filter(p=>p.brand===b);
+    let pos=0,neg=0,neu=0,eng=0,views=0,followers=0;
+    items.forEach(p=>{ if(p.sentiment==='positive')pos++; else if(p.sentiment==='negative')neg++; else neu++; eng+=Number(p.engagement)||0; views+=Number(p.views)||0; followers+=Number(p.followers)||0; });
+    const total=items.length, ment=items.filter(p=>p.type!=='post').length;
+    return {brand:b, own:b===OWN_BRAND(), total, mentions:ment, pos, neg, neu,
+      posPct: total?Math.round(pos/total*100):0, negPct: total?Math.round(neg/total*100):0,
+      eng, views, followers, net: total?((pos-neg)/total):0};
+  });
+}
+function showAnalyzeTab(id,btn){
+  document.querySelectorAll('#view-analyze .apage').forEach(p=>p.style.display='none');
+  document.querySelectorAll('#view-analyze .main-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('atab-'+id).style.display='';
+  if(btn) btn.classList.add('active');
+  if(id==='bench') setTimeout(renderBenchmark,40);
+  else if(id==='pillar') renderPillar();
+  else if(id==='perf') renderPerf();
+  else if(id==='anomaly') renderAnomaly();
+}
+function renderBenchmark(){
+  const M=brandMetrics();
+  document.getElementById('bench-table').innerHTML=`<table class="board-tbl"><thead><tr><th>Brand</th><th>Type</th><th>Mentions</th><th>Total</th><th>Positive</th><th>Negative</th><th>Engagement</th></tr></thead><tbody>`+
+    M.map(m=>`<tr style="${m.own?'background:#fdecec':''}"><td style="font-weight:700">${m.brand}</td><td>${m.own?'<span style="color:#e0211b;font-weight:700">Your brand</span>':'Competitor'}</td><td>${m.mentions}</td><td>${m.total}</td><td style="color:#2e9e5b">${m.posPct}%</td><td style="color:#e0625f">${m.negPct}%</td><td>${fmtK(m.eng)}</td></tr>`).join('')+`</tbody></table>`;
+  if(charts.bench) charts.bench.destroy();
+  charts.bench=new Chart(document.getElementById('chart-bench'),{type:'bar',data:{labels:M.map(m=>m.brand+(m.own?' ★':'')),datasets:[
+    {label:'Positive',data:M.map(m=>m.pos),backgroundColor:'#52c41a',stack:'s'},
+    {label:'Neutral',data:M.map(m=>m.neu),backgroundColor:'#faad14',stack:'s'},
+    {label:'Negative',data:M.map(m=>m.neg),backgroundColor:'#ff4d4f',stack:'s'},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}}});
+}
+function renderPillar(){
+  const M=brandMetrics(); const mx=k=>Math.max(1,...M.map(m=>m[k]));
+  const mt=mx('total'),me=mx('eng'),mf=mx('followers');
+  // Growth = share of each brand's items from the last 45 days (momentum).
+  const now=Date.now(), CUT=45*864e5;
+  M.forEach(m=>{ const items=ALL_POSTS.filter(p=>p.brand===m.brand);
+    const recent=items.filter(p=>{ const d=Date.parse(p.timestamps||p.date); return d&&(now-d)<CUT; }).length;
+    m.growth=items.length?Math.round(recent/items.length*100):0; });
+  const AXES=['Visibility','Sentiment','Engagement','Growth','Authority'];
+  const vals=m=>[Math.round(m.total/mt*100),Math.round((m.net+1)/2*100),Math.round(m.eng/me*100),m.growth,Math.round((m.followers/mf||0)*100)];
+  const PAL=['#0ea5e9','#16a34a','#f59e0b','#8b5cf6','#14b8a6','#64748b'];
+  const ds=M.map((m,i)=>{ const c=m.own?'#2563eb':PAL[i%PAL.length];
+    return {label:m.brand+(m.own?' ★ (you)':''),data:vals(m),borderColor:c,backgroundColor:c+(m.own?'30':'12'),borderWidth:m.own?2.5:1.5,pointBackgroundColor:c,pointRadius:m.own?4:2.5,order:m.own?0:1}; });
+  if(charts.pillar) charts.pillar.destroy();
+  charts.pillar=new Chart(document.getElementById('chart-pillar'),{type:'radar',data:{labels:AXES,datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11},padding:12}},
+      tooltip:{callbacks:{label:ctx=>ctx.dataset.label.replace(' ★ (you)','')+': '+ctx.parsed.r}}},
+      scales:{r:{min:0,max:100,ticks:{display:false,stepSize:25},grid:{color:'rgba(15,23,42,.07)'},angleLines:{color:'rgba(15,23,42,.07)'},
+        pointLabels:{font:{size:12.5,weight:'600'},color:'#475569'}}}}});
+  // Per-brand score bars (detail)
+  document.getElementById('pillar-cards').innerHTML=M.map(m=>{
+    const v=vals(m);
+    return `<div class="panel" style="margin-bottom:12px;${m.own?'border:2px solid var(--brand)':''}">
+      <div class="panel-title">${m.brand} ${m.own?'<span style="color:var(--brand);font-size:11px">(Your brand)</span>':'<span style="color:#888;font-size:11px">(Competitor)</span>'}</div>
+      ${AXES.map((n,i)=>`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:12px"><span>${n}</span><span style="font-weight:700">${v[i]}</span></div><div style="height:8px;border-radius:4px;background:#eef1f6"><div style="height:100%;border-radius:4px;width:${v[i]}%;background:${v[i]>=66?'#16a34a':v[i]>=33?'#f59e0b':'#e11d48'}"></div></div></div>`).join('')}
+    </div>`;
+  }).join('');
+}
+function renderPerf(){
+  const feed=ALL_POSTS.filter(p=>currentBrand==='all'||p.brand===currentBrand);
+  const top=[...feed].sort((a,b)=>(Number(b.engagement)||0)-(Number(a.engagement)||0)).slice(0,12);
+  const plt={}; feed.forEach(p=>plt[p.platform]=(plt[p.platform]||0)+(Number(p.engagement)||0));
+  document.getElementById('perf-content').innerHTML=
+    `<div class="panel"><div class="panel-title">Engagement by Platform</div><div style="padding:6px">`+
+    Object.entries(plt).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #f5f5f5"><span style="text-transform:capitalize">${k}</span><span style="font-weight:700">${fmtK(v)}</span></div>`).join('')+`</div></div>`+
+    `<div class="panel" style="margin-top:12px"><div class="panel-title">Top Posts by Engagement</div><table class="board-tbl"><thead><tr><th>Author</th><th>Platform</th><th>Engagement</th><th>Text</th></tr></thead><tbody>`+
+    top.map(p=>`<tr><td style="font-weight:600">${p.name||p.handle}</td><td style="text-transform:capitalize">${p.platform}</td><td>${fmtK(p.engagement)}</td><td style="color:#666">${(p.text||'').slice(0,60)}</td></tr>`).join('')+`</tbody></table></div>`;
+}
+function renderAnomaly(){
+  const feed=ALL_POSTS.filter(p=>currentBrand==='all'||p.brand===currentBrand);
+  const day={}; feed.forEach(p=>{ const d=new Date(p.timestamps||p.date); if(isNaN(d)||d.getFullYear()<2000)return; const k=d.toISOString().slice(0,10); if(!day[k])day[k]={t:0,neg:0}; day[k].t++; if(p.sentiment==='negative')day[k].neg++; });
+  const days=Object.keys(day); const vols=days.map(k=>day[k].t);
+  const mean=vols.reduce((a,b)=>a+b,0)/(vols.length||1);
+  const sd=Math.sqrt(vols.reduce((a,b)=>a+(b-mean)**2,0)/(vols.length||1))||1;
+  const anoms=days.map(k=>({k,...day[k],z:(day[k].t-mean)/sd})).filter(d=>d.z>2||d.neg>=3).sort((a,b)=>b.z-a.z);
+  const el=document.getElementById('anomaly-content');
+  el.innerHTML=anoms.length?anoms.map(a=>`<div style="border:1px solid ${a.neg>=3?'#ffa39e':'#ffd591'};border-radius:8px;padding:12px;margin-bottom:8px;background:#fff"><b>${a.k}</b> — ${a.t} mentions ${a.z>2?`<span style="color:#d4880a">(volume spike, z=${a.z.toFixed(1)})</span>`:''} ${a.neg>=3?`<span style="color:#c43a5b">· ${a.neg} negative</span>`:''}</div>`).join('')
+    :'<div style="padding:18px;color:#2e9e5b;font-size:13px">✓ No statistical anomalies detected in the current window.</div>';
+}
+function genReport(kind){
+  const M=brandMetrics(); const own=M.find(m=>m.own)||M[0]||{}; const comps=M.filter(m=>!m.own);
+  const el=document.getElementById('reports-content'); let body='';
+  if(kind==='competitor'){
+    const rank=[...M].sort((a,b)=>b.mentions-a.mentions);
+    body=`<h3 style="margin-bottom:8px">⚖️ Competitor Report</h3>
+      <p><b>${own.brand}</b> (your brand): ${own.mentions} mentions · ${own.posPct}% positive · ${own.negPct}% negative · ${fmtK(own.eng)} engagement.</p>
+      <p style="margin-top:8px"><b>Share-of-voice rank:</b> ${rank.map((m,i)=>`${i+1}. ${m.brand} (${m.mentions})`).join(' · ')}</p>
+      <p style="margin-top:8px">${own.mentions>=Math.max(0,...comps.map(c=>c.mentions))?'✅ You lead competitors on mention volume.':'⚠️ A competitor leads on volume — push share of voice.'}</p>`;
+  } else if(kind==='audit'){
+    body=`<h3 style="margin-bottom:8px">🔍 Brand Audit — ${own.brand}</h3><ul style="margin-left:18px;line-height:1.9">
+      <li>Total items: <b>${own.total}</b> (${own.mentions} third-party mentions)</li>
+      <li>Sentiment: <b>${own.posPct}%</b> positive · ${own.negPct}% negative</li>
+      <li>Engagement: <b>${fmtK(own.eng)}</b> · Reach (views): ${fmtK(own.views)}</li>
+      <li>Top context: ${KEYWORDS.slice(0,6).map(k=>k.name).join(', ')||'—'}</li></ul>`;
+  } else {
+    const cAvg=comps.length?(comps.reduce((s,c)=>s+c.net,0)/comps.length*100).toFixed(0):'—';
+    body=`<h3 style="margin-bottom:8px">📈 Leadership Summary</h3>
+      <p>${own.brand}: <b>${own.mentions}</b> mentions, ${own.posPct}% positive. ${comps.length} competitors tracked.</p>
+      <p style="margin-top:8px">Net sentiment <b>${(own.net*100).toFixed(0)}</b> vs competitor avg <b>${cAvg}</b>.</p>`;
+  }
+  el.innerHTML=`<div class="panel">${body}<div style="margin-top:12px;font-size:11px;color:#aaa">Generated ${new Date().toLocaleString('en-GB')} · ${currentBrand==='all'?'All brands':currentBrand}</div></div>`;
 }
 
 function showDetailTab(id,btn){
@@ -1395,45 +2264,318 @@ function showSubTab(btn,target){
 // HELPERS
 // ══════════════════════════════════════════════════════
 function fmtK(n){n=Number(n);if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return String(n);}
+// Card date: prefer the reliable ISO timestamp; fall back to display_date; never show
+// a 1899/1970 epoch artifact. Keeps relative labels like "1 year ago" as-is.
+function niceDate(ts, fallback){
+  if(ts){ const d=new Date(ts); if(!isNaN(d)&&d.getFullYear()>2000) return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+  const f=String(fallback||'');
+  if(f && !/18\d\d|19[0-6]\d|1970/.test(f)){
+    const d2=new Date(f); if(!isNaN(d2)&&d2.getFullYear()>2000) return d2.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    return f; // e.g. "1 year ago"
+  }
+  return 'N/A';
+}
 
 // ══════════════════════════════════════════════════════
-// N8N WEBHOOK — SETTINGS
+// N8N CONFIG  (base URL + selectable brand list)
+//   Base URL resolves: window.N8N_BASE_URL (config.js) > localStorage.
+//   This is configuration, NOT run-lifecycle state, so localStorage is fine.
 // ══════════════════════════════════════════════════════
-let WEBHOOK_URL = localStorage.getItem('n8n_webhook_url') || '';
+function getBaseUrl(){
+  const raw = (window.N8N_BASE_URL || localStorage.getItem('n8n_base_url') || '').trim();
+  return raw.replace(/\/+$/,''); // strip trailing slashes (empty = same-origin relative calls)
+}
+// Same-origin mode: no base URL configured but the page is served over http(s),
+// so we can call /webhook/... relative to wherever this file is hosted (e.g. on the n8n server).
+function sameOriginOk(){ return !getBaseUrl() && location.protocol !== 'file:'; }
+// True when we have a way to reach the backend at all (explicit base, or same-origin).
+function canFetch(){ return !!getBaseUrl() || sameOriginOk(); }
+function getBrandList(){
+  if(Array.isArray(window.N8N_BRANDS) && window.N8N_BRANDS.length) return window.N8N_BRANDS.slice();
+  try{
+    const stored = JSON.parse(localStorage.getItem('n8n_brands') || 'null');
+    if(Array.isArray(stored) && stored.length) return stored;
+  }catch(e){}
+  return ['Ebco','Hettich']; // default seed
+}
 
 function openSettings(){
-  document.getElementById('webhook-url-input').value = WEBHOOK_URL;
-  document.getElementById('modal-status').className = 'modal-status';
-  document.getElementById('modal-status').textContent = '';
+  document.getElementById('base-url-input').value = (window.N8N_BASE_URL || localStorage.getItem('n8n_base_url') || '');
+  document.getElementById('base-url-input').disabled = !!window.N8N_BASE_URL;
+  document.getElementById('brands-input').value = getBrandList().join('\n');
+  const st = document.getElementById('modal-status');
+  st.className = 'modal-status'; st.textContent = window.N8N_BASE_URL ? 'Base URL is set by config.js (read-only here).' : '';
   document.getElementById('settings-modal').classList.add('open');
 }
 function closeSettings(){
   document.getElementById('settings-modal').classList.remove('open');
 }
-function saveWebhook(){
-  const url = document.getElementById('webhook-url-input').value.trim();
-  if(!url){ alert('Please enter a webhook URL'); return; }
-  WEBHOOK_URL = url;
-  localStorage.setItem('n8n_webhook_url', url);
+function saveSettings(){
+  if(!window.N8N_BASE_URL){
+    const url = document.getElementById('base-url-input').value.trim().replace(/\/+$/,'');
+    if(!url){ alert('Please enter the n8n base URL'); return; }
+    localStorage.setItem('n8n_base_url', url);
+  }
+  const brands = document.getElementById('brands-input').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  localStorage.setItem('n8n_brands', JSON.stringify([...new Set(brands)]));
   closeSettings();
-  fetchData();
+  renderBrandPicker();
+  setLive(getBaseUrl() ? 'offline' : 'offline');
 }
 async function testWebhook(){
-  const url = document.getElementById('webhook-url-input').value.trim();
-  if(!url){ alert('Enter a URL first'); return; }
+  const base = (window.N8N_BASE_URL || document.getElementById('base-url-input').value.trim()).replace(/\/+$/,'');
+  if(!base && location.protocol === 'file:'){ alert('Enter the base URL first (or serve this page from your n8n server for same-origin calls)'); return; }
+  // base '' => same-origin: test /webhook/status relative to this host
   const st = document.getElementById('modal-status');
   st.className = 'modal-status'; st.textContent = 'Testing…'; st.style.display='block';
   try{
-    const res = await fetch(url, {signal: AbortSignal.timeout(8000)});
+    // status with a junk run_id should still return 2xx JSON (empty run) if reachable
+    const res = await fetch(base+'/webhook/status?run_id=__ping__', {signal: AbortSignal.timeout(8000)});
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const json = await res.json();
-    const count = (json.posts||json.raw_posts||json||[]).length;
+    await res.json();
     st.className = 'modal-status ok';
-    st.textContent = `✓ Connected — ${count} posts found`;
+    st.textContent = '✓ Reachable — status endpoint responded.';
   } catch(e){
     st.className = 'modal-status err';
-    st.textContent = '✗ Failed: '+e.message+'. Check your URL and CORS headers.';
+    st.textContent = '✗ Failed: '+e.message+'. Check the URL, that n8n is reachable from this browser, and CORS headers.';
   }
+}
+
+// ══════════════════════════════════════════════════════
+// API CLIENT  (analog of lib/api.ts)
+// ══════════════════════════════════════════════════════
+const API = {
+  async startAnalysis(brands, force){
+    const base = getBaseUrl(); // '' = same-origin: call /webhook/... relative to this host
+    if(!canFetch()) throw new Error('No n8n base URL configured');
+    const res = await fetch(base+'/webhook/analyze', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ brands, force: !!force }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if(!res.ok) throw new Error('analyze HTTP '+res.status);
+    /** @returns {{run_id:string,status:string,total:number}} */
+    return res.json();
+  },
+  async getStatus(runId, signal){
+    const base = getBaseUrl();
+    if(!canFetch()) throw new Error('No n8n base URL configured');
+    const res = await fetch(base+'/webhook/status?run_id='+encodeURIComponent(runId), { signal });
+    if(!res.ok) throw new Error('status HTTP '+res.status);
+    /** @returns {{run_id,finished,total,done,errored,brands:Array<{brand,status,dashboard}>}} */
+    return res.json();
+  },
+};
+
+// ══════════════════════════════════════════════════════
+// BRAND PICKER  (which brands to analyse)
+// ══════════════════════════════════════════════════════
+let SELECTED_BRANDS = new Set();
+function renderBrandPicker(){
+  const list = getBrandList();
+  const wrap = document.getElementById('brand-chips');
+  // keep only still-valid selections
+  SELECTED_BRANDS = new Set([...SELECTED_BRANDS].filter(b=>list.includes(b)));
+  if(!list.length){
+    wrap.innerHTML = '<span class="brand-chip empty">No brands configured — add them in ⚙ Settings</span>';
+    updateAnalyzeBtn();
+    return;
+  }
+  wrap.innerHTML = list.map(b=>{
+    const on = SELECTED_BRANDS.has(b);
+    return `<label class="brand-chip${on?' checked':''}">
+      <input type="checkbox" ${on?'checked':''} onchange="toggleBrand('${b.replace(/'/g,"\\'")}', this.checked)"/>${b}
+    </label>`;
+  }).join('');
+  updateAnalyzeBtn();
+}
+function toggleBrand(brand, on){
+  if(on) SELECTED_BRANDS.add(brand); else SELECTED_BRANDS.delete(brand);
+  // reflect checked styling without full re-render
+  document.querySelectorAll('#brand-chips .brand-chip').forEach(el=>{
+    const cb = el.querySelector('input');
+    el.classList.toggle('checked', cb && cb.checked);
+  });
+  updateAnalyzeBtn();
+}
+function updateAnalyzeBtn(){
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled = SELECTED_BRANDS.size === 0 || (RUN && RUN.active);
+}
+
+// ══════════════════════════════════════════════════════
+// TRIGGER + POLL ENGINE
+//   Run lifecycle lives ONLY in this in-memory object (no storage).
+// ══════════════════════════════════════════════════════
+const POLL_INTERVAL_MS = 3000;
+const MAX_ATTEMPTS = 60; // ~3 min
+let RUN = null;
+
+function clearRun(){
+  if(RUN){
+    if(RUN.timer){ clearTimeout(RUN.timer); RUN.timer = null; }
+    if(RUN.abort){ try{ RUN.abort.abort(); }catch(e){} RUN.abort = null; }
+    RUN.active = false;
+  }
+}
+
+function setRunState(msg, cls){
+  const el = document.getElementById('run-state');
+  el.textContent = msg || '';
+  el.className = 'run-state' + (cls ? ' '+cls : '');
+}
+
+function onAnalyzeClick(){
+  const brands = [...SELECTED_BRANDS];
+  if(!brands.length) return;
+  if(!canFetch()){ openSettings(); return; }
+  startRun(brands, document.getElementById('force-refresh').checked);
+}
+
+async function startRun(brands, force){
+  clearRun(); // cancel any in-flight poller — no overlapping runs
+  RUN = { runId:null, brands, force:!!force, attempts:0, active:true, timer:null, abort:null,
+          statusByBrand:{}, dashboards:{} };
+  brands.forEach(b=>{ RUN.statusByBrand[b] = 'queued'; });
+
+  document.getElementById('analyze-btn').disabled = true; // debounce double-click
+  document.getElementById('download-all-btn').style.display = 'none';
+  setLive('loading');
+  renderProgress();
+  setRunState('Queuing '+brands.length+' brand'+(brands.length>1?'s':'')+'…');
+
+  try{
+    const { run_id, total } = await API.startAnalysis(brands, force);
+    if(!RUN || !RUN.active) return; // superseded
+    RUN.runId = run_id;
+    RUN.total = total || brands.length;
+    document.getElementById('run-source').textContent = 'run '+run_id;
+    setRunState('Queued — 0/'+RUN.total+' done');
+    schedulePoll(0); // poll immediately, then every 3s
+  }catch(e){
+    RUN.active = false;
+    setLive('offline');
+    setRunState('Could not start: '+e.message, 'err');
+    updateAnalyzeBtn();
+  }
+}
+
+function schedulePoll(delay){
+  if(!RUN || !RUN.active) return;
+  RUN.timer = setTimeout(pollOnce, delay);
+}
+
+async function pollOnce(){
+  if(!RUN || !RUN.active || !RUN.runId) return;
+  RUN.attempts++;
+  RUN.abort = new AbortController();
+  try{
+    const data = await API.getStatus(RUN.runId, RUN.abort.signal);
+    if(!RUN || !RUN.active) return; // superseded mid-flight
+    applyStatus(data);
+    if(data.finished){
+      finishRun(data);
+      return;
+    }
+  }catch(e){
+    // network/transient error — count toward attempts, retry next tick, don't crash
+    if(!RUN || !RUN.active) return;
+    setRunState('Polling… (retry after error: '+e.message+')', 'warn');
+  }
+  if(RUN.attempts >= MAX_ATTEMPTS){
+    timeoutRun();
+    return;
+  }
+  schedulePoll(POLL_INTERVAL_MS);
+}
+
+function applyStatus(data){
+  RUN.total = data.total || RUN.total;
+  let newlyDone = false;
+  (data.brands||[]).forEach(item=>{
+    const prev = RUN.statusByBrand[item.brand];
+    RUN.statusByBrand[item.brand] = item.status;
+    if(item.status === 'done' && item.dashboard){
+      const dash = { ...item.dashboard, brand: item.dashboard.brand || item.brand };
+      if(prev !== 'done') newlyDone = true;
+      RUN.dashboards[item.brand] = dash;
+    }
+  });
+  const done = data.done!=null ? data.done : Object.values(RUN.statusByBrand).filter(s=>s==='done').length;
+  const errored = data.errored!=null ? data.errored : Object.values(RUN.statusByBrand).filter(s=>s==='error').length;
+  setRunState('In progress — '+done+'/'+RUN.total+' done'+(errored?(' · '+errored+' error'+(errored>1?'s':'')):''));
+  renderProgress();
+  if(newlyDone) renderCompletedDashboards(); // progressive
+}
+
+function finishRun(data){
+  if(data) applyStatus(data);
+  RUN.active = false;
+  clearRun();
+  const done = Object.values(RUN.statusByBrand).filter(s=>s==='done').length;
+  const errored = Object.values(RUN.statusByBrand).filter(s=>s==='error').length;
+  renderCompletedDashboards();
+  setLive(done ? 'live' : 'offline');
+  setRunState('Finished — '+done+'/'+RUN.total+' done'+(errored?(' · '+errored+' failed'):''), errored?'warn':'ok');
+  showDataStatus('Analysis finished · '+done+'/'+RUN.total+' brands · '+new Date().toLocaleTimeString());
+  if(Object.keys(RUN.dashboards).length > 1) document.getElementById('download-all-btn').style.display = '';
+  updateAnalyzeBtn();
+}
+
+function timeoutRun(){
+  clearRun();
+  RUN.active = false;
+  setLive('offline');
+  const grid = document.getElementById('prog-grid');
+  const note = document.createElement('div');
+  note.className = 'prog-row';
+  note.innerHTML = '<span class="pb">Timed out after ~3 min.</span> '+
+    '<button class="prog-btn retry" onclick="keepWaiting()">Keep waiting</button> '+
+    '<button class="prog-btn" onclick="retryRun()">Retry run</button>';
+  grid.appendChild(note);
+  setRunState('Timed out — still queued on the server. Keep waiting or retry.', 'warn');
+  updateAnalyzeBtn();
+}
+function keepWaiting(){
+  if(!RUN || !RUN.runId) return;
+  RUN.active = true; RUN.attempts = 0;
+  setRunState('Resumed polling…', 'warn');
+  renderProgress();
+  schedulePoll(0);
+}
+function retryRun(){
+  if(!RUN) return;
+  startRun(RUN.brands, RUN.force);
+}
+// Retry a single errored brand (re-run just that brand, force:true)
+function retryBrand(brand){
+  startRun([brand], true);
+}
+
+// ── Progress UI ──
+function renderProgress(){
+  const grid = document.getElementById('prog-grid');
+  if(!RUN){ grid.innerHTML=''; return; }
+  grid.innerHTML = RUN.brands.map(b=>{
+    const s = RUN.statusByBrand[b] || 'queued';
+    let badge;
+    if(s==='done') badge = '<span class="prog-badge done">✓ done</span>';
+    else if(s==='error') badge = '<span class="prog-badge error">✕ error</span>';
+    else badge = '<span class="prog-badge queued"><span class="prog-spin"></span>queued</span>';
+    let extra = '';
+    if(s==='done') extra = `<button class="prog-btn" onclick="downloadBrandExcel('${b.replace(/'/g,"\\'")}')">⬇ Excel</button>`;
+    else if(s==='error') extra = `<button class="prog-btn retry" onclick="retryBrand('${b.replace(/'/g,"\\'")}')">↻ Retry</button>`;
+    return `<div class="prog-row"><span class="pb">${b}</span>${badge}${extra}</div>`;
+  }).join('');
+}
+
+// ── Progressive render: feed completed dashboards through the existing processor ──
+function renderCompletedDashboards(){
+  const items = Object.values(RUN.dashboards);
+  if(!items.length) return;
+  processWebhookData(items); // rebuilds stores + brand dropdown from all-so-far
+  renderAll();
 }
 
 // ══════════════════════════════════════════════════════
@@ -1443,7 +2585,7 @@ function setLive(state){ // 'live' | 'offline' | 'loading'
   const dot = document.getElementById('live-dot');
   dot.className = 'live-dot' + (state==='live'?' ':(state==='loading'?' loading-dot ':' offline'));
 }
-function showLoadOverlay(show, msg='Fetching data from n8n…'){
+function showLoadOverlay(show, msg='Fetching data…'){
   const el = document.getElementById('load-overlay');
   document.getElementById('load-text').textContent = msg;
   el.classList.toggle('open', show);
@@ -1459,29 +2601,16 @@ function setRefreshLoading(on){
   btn.disabled = on;
 }
 
-async function fetchData(){
-  if(!WEBHOOK_URL){
-    openSettings();
+// Refresh button → re-run the most recent / currently selected brand set (async).
+function fetchData(){
+  if(!canFetch()){ openSettings(); return; }
+  const brands = (RUN && RUN.brands && RUN.brands.length) ? RUN.brands : [...SELECTED_BRANDS];
+  if(!brands.length){
+    document.getElementById('analyze-panel').scrollIntoView({behavior:'smooth',block:'center'});
+    setRunState('Pick one or more brands above, then Analyze.', 'warn');
     return;
   }
-  setLive('loading');
-  setRefreshLoading(true);
-  showLoadOverlay(true);
-  try{
-    const res = await fetch(WEBHOOK_URL, {signal: AbortSignal.timeout(30000)});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const json = await res.json();
-    processWebhookData(json);
-    renderAll();
-    setLive('live');
-    showDataStatus('Live data loaded from n8n · '+new Date().toLocaleTimeString());
-  } catch(e){
-    setLive('offline');
-    showDataStatus('Could not load live data ('+e.message+'). Showing sample data.');
-  } finally{
-    setRefreshLoading(false);
-    showLoadOverlay(false);
-  }
+  startRun(brands, document.getElementById('force-refresh').checked);
 }
 
 // ══════════════════════════════════════════════════════
@@ -1510,11 +2639,12 @@ function processWebhookData(json){
   }
 
   const PLT_MAP = {linkedin:'LinkedIn',instagram:'Instagram',facebook:'Facebook',youtube:'YouTube',twitter:'Twitter'};
+  const PLT_COLOR = {instagram:'#eb7ea8',linkedin:'#5b8dee',facebook:'#5b9ded',youtube:'#f16060',twitter:'#5acce6',tiktok:'#010101',threads:'#222'};
   const KW_COLORS=['#5c63d4','#7b3ec8','#2e9e5b','#d4880a','#c43a5b','#0a6ebf','#e74c3c','#16a085','#8e44ad','#2980b9','#e67e22','#27ae60','#e91e63','#ff5722','#795548'];
-  const AVATAR_COLORS=['#4b52d4','#52c41a','#ff4d4f','#faad14','#13c2c2','#722ed1','#eb2f96','#1890ff'];
+  const AVATAR_COLORS=['#e0211b','#52c41a','#ff4d4f','#faad14','#13c2c2','#722ed1','#eb2f96','#1890ff'];
   const INTENT_NAMES=['Appreciation','Product Inquiry','General Discussion','Complaint','Feedback','Suggestion','Brand Promo','Support Request'];
   const INTENT_ICONS=['👍','🔍','💬','⚠️','📝','💡','📣','🛠'];
-  const INTENT_CLR=['#52c41a','#4b52d4','#1890ff','#ff4d4f','#faad14','#722ed1','#13c2c2','#eb2f96'];
+  const INTENT_CLR=['#52c41a','#e0211b','#1890ff','#ff4d4f','#faad14','#722ed1','#13c2c2','#eb2f96'];
 
   const brands = brandItems.map(d=>d.brand);
 
@@ -1612,7 +2742,7 @@ function processWebhookData(json){
         platform:plt,
         name:p.name||p.handle||d.brand,
         handle:'@'+(p.handle||d.brand).toLowerCase().replace(/\s+/g,'_'),
-        date:p.display_date||p.timestamps||p.run_date||'N/A',
+        date:niceDate(p.timestamps, p.display_date||p.run_date),
         text:p.post_text||p.text||'',
         likes:Number(p.likes||0),
         comments:Number(p.comments||0),
@@ -1626,9 +2756,73 @@ function processWebhookData(json){
         thumb:p.thumb||'',
         url,
         intent:p.intent||'General Discussion',
+        type:'post',
+        verified:false,
+        followers:0,
+        avatar:'',
+      });
+    });
+
+    // ── Brand-MENTIONS (third-party posts + comments) — Locobuzz-style feed ──
+    (d.mentions||[]).forEach((m,i)=>{
+      const url=m.post_url||'';
+      // Comments all share their parent post's URL, so they need a composite key
+      // (post + author + text) — otherwise many comments collapse into one.
+      const key = m.type==='comment'
+        ? d.brand+'||c||'+url+'|'+(m.author_handle||'')+'|'+String(m.post_text||'').slice(0,40)
+        : d.brand+'||'+(url||('m'+i));
+      if(seenUrls.has(key)) return;
+      seenUrls.add(key);
+      const plt=(m.plateform||m.platform||'').toLowerCase();
+      const hand=String(m.author_handle||'').replace(/^@/,'');
+      ALL_POSTS.push({
+        brand:d.brand,
+        sentiment:(m.sentiment||'neutral').toLowerCase(),
+        platform:plt,
+        name:m.author_name||hand||d.brand,
+        handle:hand?('@'+hand):('@'+d.brand.toLowerCase().replace(/\s+/g,'_')),
+        date:niceDate(m.timestamps, m.display_date),
+        text:m.post_text||m.text||'',
+        likes:Number(m.likes||0),
+        comments:Number(m.comments||0),
+        shares:Number(m.shares||0),
+        views:Number(m.views||0),
+        engagement:Number(m.engagement||0),
+        engRate:m.eng_rate?(Number(m.eng_rate)).toFixed(2)+'%':'0%',
+        reach:m.est_reach||'0',
+        impressions:m.est_impressions||'0',
+        color:PLT_COLOR[plt]||AVATAR_COLORS[i%8],
+        thumb:m.thumb||'',
+        url,
+        intent:m.intent||'General Discussion',
+        type:m.type||'mention',
+        verified:!!m.verified,
+        followers:Number(m.followers||0),
+        avatar:m.author_avatar||'',
       });
     });
   });
+
+  // ── Recompute headline counts from the FULL feed (own posts + mentions) so the
+  //     voice cards match the Mentions drill-down (Locobuzz "Total Mentions" model) ──
+  (function(){
+    const mk=()=>({total:0,pos:0,neg:0,neu:0,users:new Set()});
+    const agg={all:mk()};
+    // Count only real-people mentions/comments (exclude the brand's own posts) so the
+    // headline "Mention Count" matches the people-only drill-down.
+    ALL_POSTS.filter(p=>p.type!=='post').forEach(p=>{
+      if(!agg[p.brand]) agg[p.brand]=mk();
+      [agg[p.brand],agg.all].forEach(a=>{
+        a.total++;
+        if(p.sentiment==='positive')a.pos++; else if(p.sentiment==='negative')a.neg++; else a.neu++;
+        if(p.handle) a.users.add(p.handle);
+      });
+    });
+    Object.entries(agg).forEach(([b,a])=>{
+      const t=a.total||0, pc=n=>t?+(n/t*100).toFixed(1):0;
+      BRAND_DATA[b]={total:t,pos:a.pos,neg:a.neg,neu:a.neu,unique:a.users.size,posPct:pc(a.pos),negPct:pc(a.neg),neuPct:pc(a.neu)};
+    });
+  })();
 
   // ── INTENT_DATA from posts' intent field ──
   function buildIntents(postsArr){
@@ -1643,15 +2837,104 @@ function processWebhookData(json){
     });
     return INTENT_NAMES.map((name,i)=>({name,icon:INTENT_ICONS[i],color:INTENT_CLR[i],...buckets[name]}));
   }
-  INTENT_DATA.all=buildIntents(ALL_POSTS);
-  brands.forEach(b=>{ INTENT_DATA[b]=buildIntents(ALL_POSTS.filter(p=>p.brand===b)); });
+  // Intent analytics from the real-people mentions/comments feed (exclude own posts).
+  const mentionFeed = ALL_POSTS.filter(p=>p.type!=='post');
+  INTENT_DATA.all=buildIntents(mentionFeed);
+  brands.forEach(b=>{ INTENT_DATA[b]=buildIntents(mentionFeed.filter(p=>p.brand===b)); });
 
-  // ── Duration bar ──
-  const dates=ALL_POSTS.map(p=>new Date(p.date)).filter(d=>!isNaN(d)).sort((a,b)=>a-b);
+  // ── WORD CLOUD DATA (per brand + aggregated 'all') ──
+  Object.keys(WC_DATA).forEach(k=>delete WC_DATA[k]);
+  const aggB={}, aggH={}, aggP={};
+  const bump=(map,x)=>{ if(x&&x.name!=null){ const n=String(x.name); map[n]=(map[n]||0)+(Number(x.weight??x.count??1)||1); } };
+  brandItems.forEach(d=>{
+    WC_DATA[d.brand]={ brands:toWC(d.cross_brands), handles:toWC(d.handles), products:toWC(d.products) };
+    (d.cross_brands||[]).forEach(x=>bump(aggB,x));
+    (d.handles||[]).forEach(x=>bump(aggH,x));
+    (d.products||[]).forEach(x=>bump(aggP,x));
+  });
+  const fromAgg=m=>Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([name,weight])=>({name,weight}));
+  WC_DATA.all={ brands:toWC(fromAgg(aggB)), handles:toWC(fromAgg(aggH)), products:toWC(fromAgg(aggP)) };
+
+  // ── Rebuild Key-Context / Entity / SOV / Sentiment-breakdown from the REAL mentions feed ──
+  (function(){
+    const PLT_DISP={instagram:'Instagram',linkedin:'LinkedIn',facebook:'Facebook',youtube:'YouTube',twitter:'Twitter',threads:'Threads',tiktok:'TikTok'};
+    const PLT_C={Instagram:'#eb7ea8',LinkedIn:'#5b8dee',Facebook:'#5b9ded',YouTube:'#f16060',Twitter:'#5acce6',Threads:'#333',TikTok:'#010101'};
+    const groups={all:mentionFeed}; brands.forEach(b=>groups[b]=mentionFeed.filter(p=>p.brand===b));
+    // SOV + sentiment-breakdown use ALL content (own posts + mentions) so every platform
+    // the brand is on (incl. LinkedIn/Twitter, which have no mentions) shows up.
+    const groupsAll={all:ALL_POSTS}; brands.forEach(b=>groupsAll[b]=ALL_POSTS.filter(p=>p.brand===b));
+    Object.entries(groupsAll).forEach(([g,arr])=>{
+      const sov={}, sb={}; const tot=arr.length||1;
+      arr.forEach(p=>{
+        const disp=PLT_DISP[p.platform]||'Other';
+        sov[disp]=(sov[disp]||0)+1;
+        if(!sb[disp]) sb[disp]={pos:0,neg:0,neu:0};
+        if(p.sentiment==='positive')sb[disp].pos++; else if(p.sentiment==='negative')sb[disp].neg++; else sb[disp].neu++;
+      });
+      PLATFORM_SOV_DATA[g]=Object.entries(sov).sort((a,b)=>b[1]-a[1]).map(([name,count])=>({name,count,pct:+(count/tot*100).toFixed(1),color:PLT_C[name]||'#999'}));
+      SENT_BREAKDOWN[g]=sb;
+    });
+    // Key-context keywords from mention text (global). Filter out filler/sentiment words,
+    // brand names, and generic terms so the "key context" is meaningful topics.
+    const STOP=new Set((
+      'this that with from your you our have has had not but they them his her she him are can will just get got out very more most some what when where which who how why into over there their were was the and for you about https http com www been then than will would should could your this have more they '+
+      'nice good great love amazing best super awesome beautiful excellent wonderful thanks thank please wow cool nice. like want need also really very much many lovely fantastic perfect happy congratulations congrats keep going done well sir mam madam '+
+      'video watch please share subscribe channel link bio comment follow check '+
+      'ebco hettich hafele häfele india indian'
+    ).split(/\s+/).filter(Boolean));
+    const tokens=arr=>{ const m={}; arr.forEach(p=>String(p.text||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).forEach(w=>{ if(w.length>=4&&!STOP.has(w)&&!/^\d+$/.test(w)) m[w]=(m[w]||0)+1; })); return m; };
+    const kw=tokens(mentionFeed);
+    const top=Object.entries(kw).sort((a,b)=>b[1]-a[1]).slice(0,14); const kmax=top.length?top[0][1]:1;
+    KEYWORDS.length=0;
+    top.forEach(([name,count],i)=>KEYWORDS.push({name,count,pct:+(count/(mentionFeed.length||1)*100).toFixed(1),nss:+(((count/kmax)*20)-10).toFixed(1),color:KW_COLORS[i%KW_COLORS.length]}));
+    // Product-wise sentiment (for the bubble cluster): top product terms with their +/- split.
+    PRODUCTS_SENT.length=0;
+    top.slice(0,16).forEach(([name])=>{
+      let pos=0,neg=0,tot=0;
+      ALL_POSTS.forEach(p=>{ if(String(p.text||'').toLowerCase().includes(name)){ tot++; if(p.sentiment==='positive')pos++; else if(p.sentiment==='negative')neg++; } });
+      PRODUCTS_SENT.push({name, pos:tot?Math.round(pos/Math.max(1,pos+neg)*100):50, count:tot});
+    });
+    // ── Entity word clouds: @handles (from text + authors), product terms, cross-mentioned brands ──
+    const wc=obj=>{ const e=Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,30); return e.map(([name,c],i)=>({t:String(name),s:c,c:WC_PALETTE[i%WC_PALETTE.length]})); };
+    const atRe=/@([a-z0-9_\.]{2,30})/gi;
+    const trackedLc=brands.map(b=>String(b).toLowerCase());
+    Object.keys(WC_DATA).forEach(k=>delete WC_DATA[k]);
+    Object.entries(groupsAll).forEach(([g,arr])=>{
+      const handles={}, products={}, xbrands={};
+      arr.forEach(p=>{
+        const t=String(p.text||'');
+        (t.match(atRe)||[]).forEach(h=>{ const k=h.toLowerCase(); handles[k]=(handles[k]||0)+1; });       // @mentions in text
+        if(p.type!=='post' && p.handle){ const k='@'+String(p.handle).replace(/^@/,'').toLowerCase(); handles[k]=(handles[k]||0)+1; } // the commenter/creator
+        new Set(t.toLowerCase().replace(/[^a-z0-9 ]/g,' ').split(/\s+/).filter(w=>w.length>=4&&!STOP.has(w)&&!/^\d+$/.test(w))).forEach(w=>products[w]=(products[w]||0)+1);
+        trackedLc.forEach((bl,i)=>{ if(bl && bl!==String(g).toLowerCase() && t.toLowerCase().includes(bl)) xbrands[brands[i]]=(xbrands[brands[i]]||0)+1; }); // other tracked brands named
+      });
+      WC_DATA[g]={ handles:wc(handles), products:wc(products), brands:Object.keys(xbrands).length?wc(xbrands):wc(products) };
+    });
+  })();
+
+  // ── Locations (from the AI's per-brand location analysis) ──
+  Object.keys(LOC_DATA).forEach(k=>delete LOC_DATA[k]);
+  const allLoc={};
+  brandItems.forEach(d=>{
+    LOC_DATA[d.brand]=(d.locations||[]).filter(l=>l&&l.name).map(l=>({name:String(l.name),pos:+l.pos||0,neg:+l.neg||0,neu:+l.neu||0}));
+    (d.locations||[]).forEach(l=>{ if(!l||!l.name)return; const n=String(l.name); if(!allLoc[n])allLoc[n]={name:n,pos:0,neg:0,neu:0}; allLoc[n].pos+=+l.pos||0; allLoc[n].neg+=+l.neg||0; allLoc[n].neu+=+l.neu||0; });
+  });
+  LOC_DATA.all=Object.values(allLoc).sort((a,b)=>(b.pos+b.neg+b.neu)-(a.pos+a.neg+a.neu)).slice(0,12);
+
+  // ── Duration bar = recent data window (ignore ancient outliers like years-old YouTube videos) ──
+  const dates=ALL_POSTS.map(p=>new Date(p.timestamps||p.date)).filter(d=>!isNaN(d)&&d.getFullYear()>2000).sort((a,b)=>a-b);
+  const durEl=document.getElementById('duration-text');
   if(dates.length>=2){
     const fmt=d=>d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-    const days=Math.round((dates[dates.length-1]-dates[0])/(864e5));
-    document.getElementById('duration-text').textContent=`${days} day(s) (${fmt(dates[0])} – ${fmt(dates[dates.length-1])})`;
+    const newest=dates[dates.length-1];
+    // window = last 12 months relative to newest; drops one-off ancient videos
+    const cutoff=new Date(newest); cutoff.setFullYear(cutoff.getFullYear()-1);
+    const within=dates.filter(d=>d>=cutoff);
+    const oldest=within[0]||newest;
+    const days=Math.max(0,Math.round((newest-oldest)/(864e5)));
+    durEl.textContent=`${days} day(s) · data till ${fmt(newest)}`;
+  } else {
+    durEl.textContent=`Data as of ${new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}`;
   }
 }
 
@@ -1669,7 +2952,7 @@ function processFlatPosts(posts){
   });
 
   const PLT_COLORS = {Instagram:'#eb7ea8',LinkedIn:'#5b8dee',Facebook:'#5b9ded',YouTube:'#f16060',Twitter:'#5acce6'};
-  const AVATAR_COLORS = ['#4b52d4','#52c41a','#ff4d4f','#faad14','#13c2c2','#722ed1','#eb2f96','#1890ff'];
+  const AVATAR_COLORS = ['#e0211b','#52c41a','#ff4d4f','#faad14','#13c2c2','#722ed1','#eb2f96','#1890ff'];
 
   // ── Compute brand list ──
   const brandSet = new Set(posts.map(p=>p.brand).filter(Boolean));
@@ -1764,7 +3047,7 @@ function processFlatPosts(posts){
   // ── INTENT_DATA from sentiment distribution per keyword/category ──
   const INTENT_ICONS=['👍','🔍','💬','⚠️','📝','💡','📣','🛠'];
   const INTENT_NAMES=['Appreciation','Product Inquiry','General Discussion','Complaint','Feedback','Suggestion','Brand Promo','Support Request'];
-  const INTENT_CLR=['#52c41a','#4b52d4','#1890ff','#ff4d4f','#faad14','#722ed1','#13c2c2','#eb2f96'];
+  const INTENT_CLR=['#52c41a','#e0211b','#1890ff','#ff4d4f','#faad14','#722ed1','#13c2c2','#eb2f96'];
 
   function deriveIntents(arr){
     const buckets={Appreciation:{total:0,pos:0,neg:0,neu:0},
@@ -1833,11 +3116,100 @@ function processFlatPosts(posts){
   }
 }
 
-// ── Auto-load on page open if URL is already saved ──
+// ── On page open: build the brand picker, stay idle (no auto-run; runs are paid) ──
 window.addEventListener('load', ()=>{
-  if(WEBHOOK_URL) fetchData();
-  else setLive('offline');
+  renderBrandPicker();
+  setLive('offline');
+  if(getBaseUrl()){
+    setRunState('Ready — select brands and click Analyze.');
+  } else if(sameOriginOk()){
+    setRunState('Ready (same-origin) — select brands and click Analyze.');
+  } else {
+    setRunState('Set your n8n base URL in ⚙ Settings to begin.', 'warn');
+  }
+  // Auto-load real data on open (dedup-reuse → instant, no credits) so the dashboard
+  // shows the live mention feed immediately, without needing to click Analyze.
+  if(canFetch()){
+    const brands = getBrandList();
+    brands.forEach(b=>SELECTED_BRANDS.add(b));
+    renderBrandPicker();
+    updateAnalyzeBtn();
+    setRunState('Loading latest data…');
+    setTimeout(()=>{ try{ startRun(brands, false); }catch(e){ console.warn('auto-load failed', e); } }, 300);
+  }
 });
+
+// Cancel any in-flight poller if the tab/page is torn down (component-unmount analog).
+window.addEventListener('beforeunload', clearRun);
+
+// ══════════════════════════════════════════════════════
+// EXCEL EXPORT  (SheetJS) — built from the dashboard objects we polled
+// ══════════════════════════════════════════════════════
+function dashboardToSheet(dash){
+  // Flatten a dashboard object into AOA rows; resilient to missing fields.
+  const rows = [];
+  rows.push(['Brand', dash.brand || '']);
+  if(dash.sentiment_score!=null) rows.push(['Sentiment score', dash.sentiment_score]);
+  if(dash.market_overview) rows.push(['Market overview', typeof dash.market_overview==='string'?dash.market_overview:JSON.stringify(dash.market_overview)]);
+  rows.push([]);
+  const t = dash.totals || {};
+  if(Object.keys(t).length){
+    rows.push(['Totals']);
+    rows.push(['Total','Positive','Negative','Neutral','Unique']);
+    rows.push([t.total||0, t.pos||0, t.neg||0, t.neu||0, t.unique||0]);
+    rows.push([]);
+  }
+  const bd = dash.sentiment_breakdown || {};
+  if(Object.keys(bd).length){
+    rows.push(['Sentiment breakdown by platform']);
+    rows.push(['Platform','Positive','Negative','Neutral']);
+    Object.entries(bd).forEach(([plt,c])=>rows.push([plt, c.pos||0, c.neg||0, c.neu||0]));
+    rows.push([]);
+  }
+  const kws = dash.keywords || [];
+  if(kws.length){
+    rows.push(['Top keywords']);
+    rows.push(['Keyword','Count']);
+    kws.forEach(k=>rows.push([k.keyword||k.name||String(k), k.count!=null?k.count:'']));
+    rows.push([]);
+  }
+  const posts = dash.posts || [];
+  if(posts.length){
+    rows.push(['Posts']);
+    rows.push(['Platform','Handle','Date','Sentiment','Intent','Likes','Comments','Shares','Views','Text','URL']);
+    posts.forEach(p=>rows.push([
+      p.plateform||p.platform||'', p.handle||'', p.display_date||p.timestamps||p.run_date||'',
+      p.sentiment||p.sentiment_category||'', p.intent||'',
+      Number(p.likes||0), Number(p.comments||0), Number(p.shares||0), Number(p.views||0),
+      p.post_text||p.text||'', p.post_url||p.url||'',
+    ]));
+  }
+  return XLSX.utils.aoa_to_sheet(rows);
+}
+function safeSheetName(name){ return String(name).replace(/[\\/?*\[\]:]/g,' ').slice(0,31) || 'Sheet'; }
+
+function downloadBrandExcel(brand){
+  const dash = RUN && RUN.dashboards && RUN.dashboards[brand];
+  if(!dash){ alert('No data for '+brand+' yet.'); return; }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, dashboardToSheet(dash), safeSheetName(brand));
+  XLSX.writeFile(wb, 'social-listening-'+brand.replace(/\s+/g,'_')+'.xlsx');
+}
+function downloadAllExcel(){
+  const dashes = RUN && RUN.dashboards ? RUN.dashboards : {};
+  const brands = Object.keys(dashes);
+  if(!brands.length){ alert('No completed brands to export yet.'); return; }
+  const wb = XLSX.utils.book_new();
+  brands.forEach(b=>XLSX.utils.book_append_sheet(wb, dashboardToSheet(dashes[b]), safeSheetName(b)));
+  XLSX.writeFile(wb, 'social-listening-all-'+brands.length+'-brands.xlsx');
+}
+// Export button in the dashboard header: current brand if a single one is selected, else all.
+function exportCurrentView(){
+  const dashes = RUN && RUN.dashboards ? RUN.dashboards : {};
+  if(!Object.keys(dashes).length){ alert('Run an analysis first — nothing to export yet.'); return; }
+  if(currentBrand && currentBrand !== 'all' && dashes[currentBrand]) downloadBrandExcel(currentBrand);
+  else downloadAllExcel();
+}
 </script>
 </body>
 </html>

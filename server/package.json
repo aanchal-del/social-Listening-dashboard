@@ -1,0 +1,15 @@
+{
+  "name": "contextual-pulse-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Backend that replaces the n8n Social Listening workflow: scrapes social platforms via Scrape Creators, analyses with NVIDIA NIM, stores in Google Sheets, and serves the dashboard.",
+  "scripts": {
+    "start": "bun run index.js",
+    "dev": "bun --watch run index.js",
+    "auth": "bun run auth.js"
+  },
+  "dependencies": {
+    "googleapis": "^173.0.0"
+  }
+}

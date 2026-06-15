@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Infectious Analyser — AI Social Listening & Customer Experience Platform</title>
+<meta name="description" content="Infectious Analyser is an AI-powered social listening and customer experience platform. Track brand mentions, sentiment, and intent across social media in real time — with AI at the core."/>
+<style>
+:root{--indigo:#e0211b;--indigo-d:#b5160f;--ink:#1a1c2e;--muted:#6b7090;--bg:#ffffff;--soft:#f5f6fb;--line:#e7e9f5}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:9px;padding:12px 22px;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:.15s;white-space:nowrap}
+.btn-primary{background:var(--indigo);color:#fff}
+.btn-primary:hover{background:var(--indigo-d);transform:translateY(-1px)}
+.btn-ghost{background:#fff;color:var(--indigo);border:1.5px solid var(--line)}
+.btn-ghost:hover{border-color:var(--indigo)}
+.btn-light{background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.35)}
+.btn-light:hover{background:rgba(255,255,255,.25)}
+/* NAV */
+header.nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;gap:28px;height:64px}
+.logo{font-weight:900;font-size:20px;color:var(--indigo);letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
+.logo .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--indigo),#ff5a4d)}
+.nav-links{display:flex;gap:24px;margin-left:8px}
+.nav-links a{font-size:14px;color:var(--muted);font-weight:600}
+.nav-links a:hover{color:var(--ink)}
+.nav-cta{margin-left:auto;display:flex;gap:10px;align-items:center}
+/* HERO */
+.hero{background:radial-gradient(1200px 500px at 70% -10%,#fdecec 0%,#fff 55%);padding:74px 0 60px;text-align:center;overflow:hidden}
+.pill{display:inline-flex;align-items:center;gap:7px;background:#fdecec;color:var(--indigo);font-size:12.5px;font-weight:700;padding:6px 14px;border-radius:20px;margin-bottom:22px}
+.hero h1{font-size:clamp(32px,5vw,56px);line-height:1.08;letter-spacing:-1.5px;font-weight:900;max-width:880px;margin:0 auto 18px}
+.hero h1 .grad{background:linear-gradient(120deg,var(--indigo),#ff5a4d);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.sub{font-size:18px;color:var(--muted);max-width:660px;margin:0 auto 30px}
+.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.hero-note{margin-top:16px;font-size:12.5px;color:var(--muted)}
+.hero-shot{max-width:980px;margin:48px auto 0;border-radius:14px;border:1px solid var(--line);box-shadow:0 30px 80px rgba(38,42,90,.18);overflow:hidden;background:#fff}
+.hero-shot .bar{height:34px;background:#f3f4fb;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:0 14px}
+.hero-shot .bar i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.hero-shot .body{padding:18px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{border:1px solid var(--line);border-radius:10px;padding:14px;text-align:left;background:var(--soft)}
+.kpi .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.kpi .v{font-size:26px;font-weight:900;margin-top:4px}
+.kpi.pos{background:#f3fcf2;border-color:#bdebb4}.kpi.neg{background:#fdf2f2;border-color:#f5b9b9}.kpi.neu{background:#fffaef;border-color:#f3e0a8}
+/* LOGOS */
+.logos{padding:34px 0;border-bottom:1px solid var(--line)}
+.logos p{text-align:center;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:18px;font-weight:700}
+.logos-row{display:flex;flex-wrap:wrap;gap:34px;justify-content:center;align-items:center;opacity:.7}
+.logos-row span{font-size:19px;font-weight:800;color:#9aa0c0}
+/* SECTION */
+section{padding:78px 0}
+.sec-head{text-align:center;max-width:680px;margin:0 auto 46px}
+.sec-head .tag{font-size:13px;font-weight:800;color:var(--indigo);text-transform:uppercase;letter-spacing:.6px}
+.sec-head h2{font-size:clamp(26px,3.4vw,38px);font-weight:900;letter-spacing:-1px;margin:10px 0 12px}
+.sec-head p{color:var(--muted);font-size:16.5px}
+/* AI STACK */
+.ai{background:var(--soft)}
+.ai-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.ai-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px;transition:.18s}
+.ai-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(38,42,90,.1);border-color:#cfd3f0}
+.ai-card .ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px;background:#fdecec}
+.ai-card h3{font-size:17px;font-weight:800;margin-bottom:6px}
+.ai-card p{font-size:13.5px;color:var(--muted)}
+/* FEATURES */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.feat{border:1px solid var(--line);border-radius:14px;padding:26px;background:#fff}
+.feat .ico{font-size:24px;margin-bottom:12px}
+.feat h3{font-size:17px;font-weight:800;margin-bottom:7px}
+.feat p{font-size:14px;color:var(--muted)}
+.feat ul{margin:12px 0 0 0;padding-left:18px}
+.feat li{font-size:13px;color:var(--muted);margin-bottom:4px}
+/* STATS */
+.stats{background:linear-gradient(120deg,#b5160f,#c4170f);color:#fff;text-align:center}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.stat .n{font-size:clamp(30px,4vw,46px);font-weight:900;letter-spacing:-1px}
+.stat .l{font-size:14px;opacity:.85;margin-top:4px}
+/* RESOURCES */
+.res-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.res{border:1px solid var(--line);border-radius:12px;padding:20px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:10px;transition:.15s}
+.res:hover{border-color:var(--indigo);color:var(--indigo)}
+/* CTA BAND */
+.cta-band{background:radial-gradient(800px 300px at 50% 120%,#fdecec,#fff);text-align:center}
+.cta-box{background:linear-gradient(120deg,#b5160f,#ff5a4d);border-radius:20px;padding:54px 30px;color:#fff;max-width:900px;margin:0 auto;box-shadow:0 30px 70px rgba(58,64,192,.35)}
+.cta-box h2{font-size:clamp(26px,3.5vw,38px);font-weight:900;letter-spacing:-1px;margin-bottom:12px}
+.cta-box p{opacity:.9;font-size:17px;margin-bottom:26px}
+/* FOOTER */
+footer{background:#10122a;color:#b9bce0;padding:54px 0 30px;font-size:14px}
+.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:30px;margin-bottom:34px}
+footer .logo{color:#fff}
+footer h4{color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px}
+footer a{display:block;color:#9499c8;margin-bottom:9px;font-size:13.5px}
+footer a:hover{color:#fff}
+.foot-bot{border-top:1px solid #25284a;padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12.5px;color:#7a7fa8}
+@media(max-width:860px){
+  .nav-links{display:none}
+  .hero-shot .body,.ai-grid,.feat-grid,.stats-grid,.res-grid{grid-template-columns:repeat(2,1fr)}
+  .foot-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:520px){.hero-shot .body,.ai-grid,.res-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="wrap nav-in">
+    <div class="logo"><span class="dot"></span>Infectious Analyser</div>
+    <nav class="nav-links">
+      <a href="#platform">Platform</a>
+      <a href="#ai">AI Stack</a>
+      <a href="#features">Features</a>
+      <a href="#resources">Resources</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-ghost" href="#demo">Book a demo</a>
+      <a class="btn btn-primary" href="index.html">Open Dashboard →</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <span class="pill">✦ AI at the core</span>
+    <h1>Social Listening &amp; Customer Experience, <span class="grad">powered by AI</span></h1>
+    <p class="sub">Infectious Analyser tracks every brand mention, comment, and conversation across social media — then reads the sentiment and intent behind it, in real time, so your team can act before it matters.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="index.html">Open the Dashboard →</a>
+      <a class="btn btn-ghost" href="#demo">Book a demo</a>
+    </div>
+    <div class="hero-note">No setup needed · Live data across YouTube, Instagram, Facebook, Threads &amp; more</div>
+
+    <!-- mock dashboard preview -->
+    <div class="hero-shot">
+      <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+      <div class="body">
+        <div class="kpi"><div class="l">Mention Count</div><div class="v">121</div></div>
+        <div class="kpi pos"><div class="l">Positive</div><div class="v">68</div></div>
+        <div class="kpi neg"><div class="l">Negative</div><div class="v">4</div></div>
+        <div class="kpi neu"><div class="l">Neutral</div><div class="v">49</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOGOS -->
+<div class="logos">
+  <div class="wrap">
+    <p>Trusted by brands that listen</p>
+    <div class="logos-row">
+      <span>Ebco</span><span>Hettich</span><span>Häfele</span><span>+ your brand</span>
+    </div>
+  </div>
+</div>
+
+<!-- AI STACK -->
+<section class="ai" id="ai">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="tag">The AI Stack</div>
+      <h2>AI that's built in, not bolted on</h2>
+      <p>Four engines work together to turn raw social chatter into decisions you can act on.</p>
+    </div>
+    <div class="ai-grid">
+      <div class="ai-card"><div class="ico">🧠</div><h3>Contextual Pulse</h3><p>Reads emotion and intent behind every mention — positive, negative, complaint, inquiry, and more.</p></div>
+      <div class="ai-card"><div class="ico">📡</div><h3>Live Signals</h3><p>Surfaces spikes, trends, and emerging topics across platforms the moment they happen.</p></div>
+      <div class="ai-card"><div class="ico">⚡</div><h3>Smart Reply</h3><p>Drafts on-brand responses to comments and queries so your team replies in seconds.</p></div>
+      <div class="ai-card"><div class="ico">🎯</div><h3>Insight Engine</h3><p>Auto-summarizes the market overview, key context, and the voices that matter most.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="tag">Platform</div>
+      <h2>One intelligence core for every team</h2>
+      <p>Everything you need to listen, understand, and act — in a single dashboard.</p>
+    </div>
+    <div class="feat-grid" id="platform">
+      <div class="feat"><div class="ico">👂</div><h3>Social Intelligence</h3><p>Monitor mentions and comments across channels with author names, reach, and engagement.</p><ul><li>Real-time mention feed</li><li>Commenter-level detail</li><li>Share of voice</li></ul></div>
+      <div class="feat"><div class="ico">💬</div><h3>Customer Voice Analysis</h3><p>Break down sentiment and intent to understand exactly what customers feel and want.</p><ul><li>Positive / negative / neutral</li><li>Contextual intent</li><li>Drill-down by topic</li></ul></div>
+      <div class="feat"><div class="ico">🔍</div><h3>Key Context &amp; Opinions</h3><p>See the themes and opinions shaping the conversation around your brand.</p><ul><li>Key-context map</li><li>Sentiment by topic</li><li>Opinion network</li></ul></div>
+      <div class="feat"><div class="ico">🏷️</div><h3>Entity Analysis</h3><p>Track the people, products, and brands mentioned alongside yours.</p><ul><li>Top voices &amp; handles</li><li>Product-wise sentiment</li><li>Cross-brand mentions</li></ul></div>
+      <div class="feat"><div class="ico">📊</div><h3>Competitive Benchmarking</h3><p>Compare brands side by side across mentions, sentiment, and engagement.</p><ul><li>Multi-brand view</li><li>Weekly trends</li><li>Exportable reports</li></ul></div>
+      <div class="feat"><div class="ico">🔄</div><h3>Always-on &amp; Weekly</h3><p>Fresh data every week, with history retained so you never lose the trend line.</p><ul><li>Auto weekly refresh</li><li>Accumulated history</li><li>Excel export</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="wrap">
+    <div class="stats-grid">
+      <div class="stat"><div class="n">5+</div><div class="l">Platforms monitored</div></div>
+      <div class="stat"><div class="n">Real-time</div><div class="l">Sentiment &amp; intent</div></div>
+      <div class="stat"><div class="n">Weekly</div><div class="l">Auto data refresh</div></div>
+      <div class="stat"><div class="n">AI</div><div class="l">At the core</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- RESOURCES -->
+<section id="resources">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="tag">Resources</div>
+      <h2>Learn how brands listen smarter</h2>
+    </div>
+    <div class="res-grid">
+      <div class="res">📄 Industry Reports</div>
+      <div class="res">⭐ Customer Stories</div>
+      <div class="res">🎥 Webinars</div>
+      <div class="res">📰 Blog</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-band" id="demo">
+  <div class="wrap">
+    <div class="cta-box">
+      <h2>See your brand's conversation, live</h2>
+      <p>Open the dashboard and watch the mentions, sentiment, and intent populate in real time.</p>
+      <a class="btn btn-light" href="index.html">Open the Dashboard →</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="logo"><span class="dot"></span>Infectious Analyser</div>
+        <p style="margin-top:12px;max-width:300px;color:#8489b5">AI-powered social listening and customer experience — turning conversations into decisions.</p>
+      </div>
+      <div><h4>Platform</h4><a href="#features">Social Intelligence</a><a href="#features">Customer Voice</a><a href="#features">Entity Analysis</a><a href="index.html">Dashboard</a></div>
+      <div><h4>Company</h4><a href="#">About</a><a href="#">Careers</a><a href="#demo">Contact</a></div>
+      <div><h4>Resources</h4><a href="#resources">Reports</a><a href="#resources">Blog</a><a href="#resources">Webinars</a></div>
+    </div>
+    <div class="foot-bot">
+      <span>© 2026 Infectious Analyser. All rights reserved.</span>
+      <span>Privacy · Terms</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

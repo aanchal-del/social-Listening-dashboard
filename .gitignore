@@ -1,0 +1,8 @@
+# Secrets — never commit
+credentials.json
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
